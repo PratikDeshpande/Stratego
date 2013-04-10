@@ -55,7 +55,7 @@ public class StrategoGraphicsPanel extends JPanel {
         
         // Draw the Units on the game board.
         ArrayList<Unit> units = gs.getUnits();
-        System.out.println(units.get(0).getPlayerID());
+    //    System.out.println(units.get(0).getPlayerID());
         
         for(Unit u:units){
         	if(u.getAlive()){

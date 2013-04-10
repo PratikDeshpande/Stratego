@@ -19,7 +19,6 @@ public class GameMain {
 		Player p2 = new PlayerExample2(2);
 		GameState gs = new GameState(p1, p2);
 		//Player asdf = new PlayerExample();
-		System.out.println("Testing");
 		
 		
 		// Starts Frame and graphics panel

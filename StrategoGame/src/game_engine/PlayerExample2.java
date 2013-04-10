@@ -67,10 +67,10 @@ public class PlayerExample2 extends Player {
 		// This line is for testing
 		this.getUnits().add(new Unit(playerID,4,7,7));
 		this.getUnits().add(new Unit(playerID,5,8,7));
-		this.getUnits().add(new Unit(playerID,6,7,6));
-		this.getUnits().add(new Unit(playerID,5,6,7));
+		this.getUnits().add(new Unit(playerID,6,7,12));
+		this.getUnits().add(new Unit(playerID,5,6,7)); 
 		
-	//	this.getUnits().add(new Unit(playerID,6,6,7));
+	//	this.getUnits().add(new Unit(playerID,1,1,7));
 
 	}
 

@@ -46,7 +46,7 @@ public class PlayerExample extends Player{
 		this.getUnits().add(new Unit(playerID,3, 2, 7)); //    sergeant */
 	
 		// This line is for testing
-		this.getUnits().add(new Unit(playerID,4,2,7));
+		this.getUnits().add(new Unit(playerID,4,2,1));
 		
 	/*	this.getUnits().add(new Unit(playerID,4, 2, 7)); //    sergeant
 		this.getUnits().add(new Unit(playerID,5, 2, 6)); //    lieutenant
