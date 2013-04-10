@@ -83,15 +83,14 @@ public class GameState {
 		}
 		// Now mark spots occupied with Player 1's Units with a '1'
 		// and mark spots occupied with Player 2's Units with a '2'
-		// TODO Implement raster function to make the index calculation less error prone
 		for(Unit u:this.units){
 			if(u.getPlayerID()==1){
-				int index = (9-u.getX())+ (10*u.getY());
+				int index = this.getUnitIndex(u);
 			//	System.out.println(index);
 				occupancyMap[index] = 1;
 			}
 			if(u.getPlayerID()==2){
-				int index = u.getX() + (10*(9-u.getY()));
+				int index = this.getUnitIndex(u);
 				//System.out.println(index);
 				occupancyMap[index] = 2;
 			}
@@ -109,13 +108,13 @@ public class GameState {
 			try {
 				Thread.sleep(1000);
 			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
+				
 				e.printStackTrace();
 			} 
 		} */
 		this.update();
 		this.update();
-		this.update();
+	//	this.update();
 
 	}
 	
@@ -135,22 +134,26 @@ public class GameState {
 	// Performs a UnitAction
 	public void performAction(UnitAction action){
 		
+		occupancyMap[ this.getUnitIndex(action.getUnit())] = 0;
+
 		if(action.getAction()==UnitAction.forward){
 			
-			//occupancyMap[]
 			action.getUnit().up();
+
+		}
+		if(action.getAction()==UnitAction.backward){
+			action.getUnit().down();
+		}
+		if(action.getAction()==UnitAction.right){
+			action.getUnit().right();
+		}
+		if(action.getAction()==UnitAction.left){
+			action.getUnit().left();
 		}
 		
-		/*
-		if(action==UnitAction.backward){
-			this.down();
-		}
-		if(action==UnitAction.right){
-			this.right();
-		}
-		if(action==UnitAction.left){
-			this.left();
-		} */
+		occupancyMap[ this.getUnitIndex(action.getUnit())] = action.getUnit().getPlayerID();
+
+
 	}
 	
 	// Retrieves moves from both players for one turn and updates GameState based on those moves.  
@@ -169,21 +172,8 @@ public class GameState {
 			
 			if(u.equals(p1Action.getUnit())){
 				
-				// Implement the action
-				// TODO: occupancy Map changes should be encapsulated in PerformAction()
-				// 1. Clear the occupancy map so that the Unit's original spot is not unoccupied
-			//	this.occupancyMap[(9-u.getX())+(u.getY()*10)]=0; // TODO: Use the raster function instead
-				this.occupancyMap[this.getUnitIndex(u)] = 0;
-				// 2. Perform the action
-				u.performAction(p1Action.getAction()); // TODO: GameState should have a performAction, not Unit
-				// 3. Mark the Unit's new spot with '1' to say that it is occupied by Player 1's unit
-				this.occupancyMap[(9-u.getX())+(u.getY()*10)]=1; // TODO: Use raster function
-				
-				// raster function: Gives index given player ID, x, and y
-				//int U// playerID, x, y;
-				
-				
-				
+				// Perform the action
+				this.performAction(p1Action);				
 				
 				
 			}
@@ -200,37 +190,13 @@ public class GameState {
 		for(Unit u:this.units){
 			if(u.equals(p2Action.getUnit())){
 				
-				// Implement the action
-				this.occupancyMap[u.getX()+((9-u.getY())*10)]=0; // TODO: Use raster function
-				u.performAction(p2Action.getAction()); // TODO: Use gameState's performAction function
-				// Change occupancyMap
-				this.occupancyMap[u.getX()+((9-u.getY())*10)]=1; // TODO: Use raster function
+				// Perform the action
+				this.performAction(p2Action);
 				
 				
 			}
 		}
-		// Find the Unit from p1Action
-	/*	for(Unit u:this.units){
-			if(u.equals(p1Action.getUnit())){
-			//	System.out.println("Found Same Unit");
-			//Implement the action
-				this.occupancyMap[(9-u.getX())+(u.getY()*10)]=0;
-				u.performAction(p1Action.getAction()); // Change occ map
-				// Change occupancyMap
-				this.occupancyMap[(9-u.getX())+(u.getY()*10)]=1;
-				
-			}
-			if(u.equals(p2Action.getUnit())){
-				//	System.out.println("Found Same Unit");
-				//Implement the action
-					this.occupancyMap[u.getX()+((9-u.getY())*10)]=0;
-					u.performAction(p2Action.getAction()); // Change occ map
-					// Change occupancyMap
-					this.occupancyMap[u.getX()+((9-u.getY())*10)]=1;
-					
-				}
-			
-		} */
+
 		
 	}
 	
@@ -242,23 +208,31 @@ public class GameState {
 	// Gives all legal actions available to player
 	public ArrayList<UnitAction> getLegalActions(int playerID){
 		
+		// This ArrayList will contain all the legal actions available to player
 		ArrayList<UnitAction> legalActions = new ArrayList<UnitAction>();
+		
 		// Cycle through all of the player's units and find legal actions
 		for(Unit u:this.units){
+			
 			int x = u.getX();
 			int y = u.getY();
 			
+			// Checks to see if unit belongs to player
 			if(u.getPlayerID()==playerID){
 				
 				// 
 				
-				// If the player is a regular player, it can move to any adjacnet unoccupied spot
+				// If the unit is a regular unit, it can move to any adjacent  spot
+				
+				// Checks to see if unit is a regular unit
 				if((u.getRank()<=8)||(u.getRank()==10)){ 
 				//	System.out.println("unit: "+ u.getRank());
 
+					// Will store the adjacent index values
 					int left,forward,right,backward;
 					
 					// Calculates the raster value for the adjacent spots (used for occupancyArray
+					// TODO: Use raster function
 					if(playerID==1){
 						left = (y*10)+(9-x+1);
 						forward = ((y+1)*10)+(9-x);
@@ -320,7 +294,19 @@ public class GameState {
 					//	System.out.println("Added backward");
 
 					}
-					 
+					
+					// These are attack actions. Here we check to see if the adjacent spot on the
+					// map is occupied by the enemy unit.
+					
+					// Reject if left is off the edge of the map OR
+					// if left is not occupied OR
+					// if left is occupied by friendly unit OR
+					// if left is not passable
+					if((left!=-1)&&(occupancyMap[left]!=0)&&(occupancyMap[left]!=u.getPlayerID())&&(map[left]==0)){
+						Unit target = null; // Find the actual unit that is occupying left
+						legalActions.add(new UnitAction(u, UnitAction.left_attack,target));
+					//	System.out.println("Added left");
+					}
 					
 				}
 				
