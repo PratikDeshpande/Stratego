@@ -2,28 +2,17 @@ package game_engine;
 
 import java.util.ArrayList;
 
+public class PlayerExample2 extends Player {
 
-public abstract class Player {
-	protected int  playerID ; // should it be static?
-	protected ArrayList<Unit> units;
-	
-	public Player(int playerID)
-	{
-		this.playerID = playerID;
-		this.units = new ArrayList<Unit>();
-		initializePos();
-		
+	public PlayerExample2(int playerID) {
+		super(playerID);
+		// TODO Auto-generated constructor stub
 	}
-	
-	public void checkConflict(){
-		return;
-	}
-	
-	//public abstract void initializ
 	
 	public void initializePos(){
 		
-		// Unit(playerID, x, y, rank. // Comment out for testing. Uncomment this fragment later
+		// Unit(playerID, x, y, rank
+		/*
 		this.getUnits().add(new Unit(playerID,0, 0, 12)); //  flag
 		this.getUnits().add(new Unit(playerID,1, 0, 11)); //   bomb
 		this.getUnits().add(new Unit(playerID,2, 0, 11)); //    bomb
@@ -73,34 +62,23 @@ public abstract class Player {
 		this.getUnits().add(new Unit(playerID,7, 3, 3)); //    colonel
 		this.getUnits().add(new Unit(playerID,8, 3, 2)); //    general
 		this.getUnits().add(new Unit(playerID,9, 3, 1)); //    marshal
+		*/
 		
+		// This line is for testing
+		this.getUnits().add(new Unit(playerID,4,7,7));
+		this.getUnits().add(new Unit(playerID,5,8,7));
+		this.getUnits().add(new Unit(playerID,6,7,6));
+		this.getUnits().add(new Unit(playerID,5,6,7));
 		
-		
-	}
-	
-/*	public void initializeUnits()
-	{
-		
-	} */
-	
-	public abstract UnitAction nextMove(GameState gs);
+	//	this.getUnits().add(new Unit(playerID,6,6,7));
 
-	public int getPlayerID() {
-		return playerID;
 	}
 
-	public void setPlayerID(int playerID) {
-		this.playerID = playerID;
+	@Override
+	public UnitAction nextMove(GameState gs) {
+		// TODO Auto-generated method stub
+		ArrayList<UnitAction> legalActions = gs.getLegalActions(this.getPlayerID()); // Change object so that playerID is automatic
+		return legalActions.get(0);
 	}
 
-	public ArrayList<Unit> getUnits() {
-		return units;
-	}
-
-	public void setUnits(ArrayList<Unit> units) {
-		this.units = units;
-	}
-	
-	
-	
 }

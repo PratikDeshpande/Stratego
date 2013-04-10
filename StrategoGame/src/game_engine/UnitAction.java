@@ -21,7 +21,7 @@ public class UnitAction {
 	public UnitAction(Unit u, int action, Unit target){
 		this.unit = u;
 		this.action = action;
-		this.target = target;
+		this.target = target; // setTarget(target);
 	}
 	
 	public UnitAction(Unit u, int action){
@@ -46,6 +46,14 @@ public class UnitAction {
 
 	public void setAction(int action) {
 		this.action = action;
+	}
+
+	public Unit getTarget() {
+		return target;
+	}
+
+	public void setTarget(Unit target) {
+		this.target = target;
 	} 
 
 }

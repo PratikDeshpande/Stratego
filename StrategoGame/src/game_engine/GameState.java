@@ -46,8 +46,8 @@ public class GameState {
 				0,0,0,0,0,0,0,0,0,0,
 				0,0,0,0,0,0,0,0,0,0, 
 				0,0,0,0,0,0,0,0,0,0,
-				0,0,1,1,0,0,1,1,0,0, 
-				0,0,1,1,0,0,1,1,0,0,
+				0,0,0,0,0,0,0,0,0,0, // For testing we are removing the lakes in the middle
+				0,0,0,0,0,0,0,0,0,0,
 				0,0,0,0,0,0,0,0,0,0, 
 				0,0,0,0,0,0,0,0,0,0,
 				0,0,0,0,0,0,0,0,0,0, 
@@ -111,7 +111,16 @@ public class GameState {
 			} 
 		} */
 		this.update();
-		this.update();
+	/*	for(int i=0;i<100;i++){
+		
+			if(this.navigationMap.get(Integer.valueOf(i)).getOccupyingUnit()==null){
+				System.out.println(i + ": null");
+			}
+			else{
+				System.out.println(i +" is occupied ");		
+			}
+		} */
+	//	this.update();
 	//	this.update();
 
 	}
@@ -132,25 +141,86 @@ public class GameState {
 	// Performs a UnitAction
 	public void performAction(UnitAction action){
 		
+		Unit u = action.getUnit();
+		int actionPerformed = action.getAction();
 		
-		this.navigationMap.get(Integer.valueOf(this.getUnitIndex(action.getUnit()))).setOccupyingUnit(null);
+		this.navigationMap.get(Integer.valueOf(this.getUnitIndex(u))).setOccupyingUnit(null);
 
-		if(action.getAction()==UnitAction.forward){
+		// If regular motion. Already checked edge cases
+		if(actionPerformed==UnitAction.forward){
+			u.up();
+		}
+		if(actionPerformed==UnitAction.backward){
+			u.down();
+		}
+		if(actionPerformed==UnitAction.right){
+			u.right();
+		}
+		if(actionPerformed==UnitAction.left){
+			u.left();
+		}
+		
+
+		
+		// If regular attack action
+		if((actionPerformed==UnitAction.left_attack)||(actionPerformed==UnitAction.right_attack)||(actionPerformed==UnitAction.forward_attack)||(actionPerformed==UnitAction.backward_attack)){
 			
-			action.getUnit().up();
+			Unit target = action.getTarget();
+			// Removes target from map
+			this.navigationMap.get(Integer.valueOf(this.getUnitIndex(target))).setOccupyingUnit(null);
+			
+			//Unhides target
+			target.setHidden(false);
+			//Unhides unit
+			u.setHidden(false);
+			// Check the rank of the target unit
+			int rank = target.getRank();
+			//TODO include logic for special units
+			// Target is higher ranked, so attack fails and unit dies
+			if(rank>u.getRank()){
+				System.out.println("Target rank is higher");
+				// target stays in same location, unit dies
+				u.setAlive(false);
+				// Removes unit from map [nvm, unit is already removed
+				//this.navigationMap.get(Integer.valueOf(i))
+			}
+			if(rank==u.getRank()){
+				System.out.println("Target rank is equal");
+				u.setAlive(false);
+				target.setAlive(false);
+			}
+			if(rank<u.getRank()){
+				// If target is lower ranked than unit
+				System.out.println("Target rank is lower");
+				
+				target.setAlive(false);
 
-		}
-		if(action.getAction()==UnitAction.backward){
-			action.getUnit().down();
-		}
-		if(action.getAction()==UnitAction.right){
-			action.getUnit().right();
-		}
-		if(action.getAction()==UnitAction.left){
-			action.getUnit().left();
+				if(actionPerformed==UnitAction.left_attack){
+					u.left();
+				}
+				if(actionPerformed==UnitAction.right_attack){
+					u.right();
+				}
+				if(actionPerformed==UnitAction.forward_attack){
+					u.up();
+				}
+				if(actionPerformed==UnitAction.backward_attack){
+					u.down();
+				}
+			}
+			
+			if(target.getAlive()){
+				this.navigationMap.get(Integer.valueOf(this.getUnitIndex(target))).setOccupyingUnit(target);
+			}
+			
 		}
 		
-		this.navigationMap.get(Integer.valueOf(this.getUnitIndex(action.getUnit()))).setOccupyingUnit(action.getUnit());
+		// IF it is still alive, if not, it has already been cleared from map. just don't put it back on the map
+		if(u.getAlive()){
+			this.navigationMap.get(Integer.valueOf(this.getUnitIndex(u))).setOccupyingUnit(u);
+		}
+
+		
 
 
 	}
@@ -158,11 +228,19 @@ public class GameState {
 	// Retrieves moves from both players for one turn and updates GameState based on those moves.  
 	public void update()
 	{
+		// For Testing Purposes
+		for(UnitAction ua:this.getLegalActions(1)){	
+			System.out.println("Player1 LegalAction: "+ua.getAction());	
+		}
+		for(UnitAction ua:this.getLegalActions(2)){
+			System.out.println("Player2 LegalAction: "+ua.getAction());
+		}
+
 		
-	//	UnitAction p1Action = this.getLegalActions(1).get(0); // For Testing Purposes
 		
 		// Retrieve Player 1's Next Move.
-		UnitAction p1Action = player1.nextMove(this);
+	//	UnitAction p1Action = player1.nextMove(this);
+		UnitAction p1Action = this.getLegalActions(player1.playerID).get(0); // For Testing Purposes
 
 		// Implement Player 1's Move.
 		
@@ -177,7 +255,7 @@ public class GameState {
 				
 			}
 		}
-		
+		/*
 		//	UnitAction p2Action = this.getLegalActions(2).get(0);
 
 		// Retrieve Player 2's Next Move
@@ -195,6 +273,7 @@ public class GameState {
 				
 			}
 		}
+		*/
 
 		
 	}
@@ -270,24 +349,24 @@ public class GameState {
 					// Reject if left is off the edge of the map OR
 					// if left is occupied by unit 
 					if((left!=-1)&&(!this.navigationMap.get(Integer.valueOf(left)).isOccupied())&&(this.navigationMap.get(Integer.valueOf(left)).isTraversible())){
-						legalActions.add(new UnitAction(u, UnitAction.left));
+		//				legalActions.add(new UnitAction(u, UnitAction.left));
 					}
 					// Reject if right is off the edge of the map OR
 					// if right is occupied by unit
 					if((right!=-1)&&(!this.navigationMap.get(Integer.valueOf(right)).isOccupied())&&(this.navigationMap.get(Integer.valueOf(right)).isTraversible())){
-						legalActions.add(new UnitAction(u, UnitAction.right));
+		//				legalActions.add(new UnitAction(u, UnitAction.right));
 
 					}
 					// Reject if left is off the edge of the map OR
 					// if left is occupied by unit 
 					if((forward!=-1)&&(!this.navigationMap.get(Integer.valueOf(forward)).isOccupied())&&(this.navigationMap.get(Integer.valueOf(forward)).isTraversible())){
-						legalActions.add(new UnitAction(u, UnitAction.forward));
+		//				legalActions.add(new UnitAction(u, UnitAction.forward));
 
 					}
 					// Reject if right is off the edge of the map OR
 					// if right is occupied by unit
 					if((backward!=-1)&&(!this.navigationMap.get(Integer.valueOf(backward)).isOccupied())&&(this.navigationMap.get(Integer.valueOf(backward)).isTraversible())){
-						legalActions.add(new UnitAction(u, UnitAction.backward));
+		//				legalActions.add(new UnitAction(u, UnitAction.backward));
 					}
 					
 					// These are attack actions. Here we check to see if the adjacent spot on the
@@ -297,15 +376,37 @@ public class GameState {
 					// if left is not occupied OR
 					// if left is occupied by friendly unit OR
 					// if left is not passable
-			/*		if((left!=-1)&&(occupancyMap[left]!=0)&&(occupancyMap[left]!=u.getPlayerID())&&(map[left]==0)){
-						Unit target = null; // Find the actual unit that is occupying left
-						legalActions.add(new UnitAction(u, UnitAction.left_attack,target));
-					//	System.out.println("Added left");
-					} */
 					if((left!=-1)&&(this.navigationMap.get(Integer.valueOf(left)).isOccupied())&&(this.navigationMap.get(Integer.valueOf(left)).getOccupyingUnit().getPlayerID()!=u.getPlayerID())&&(this.navigationMap.get(Integer.valueOf(left)).isTraversible())){
 						Unit target = this.navigationMap.get(Integer.valueOf(left)).getOccupyingUnit();
 						legalActions.add(new UnitAction(u, UnitAction.left_attack,target));
 						System.out.println("Added left attack");
+					}
+					// Reject if right is off the edge of the map OR
+					// if right is not occupied OR
+					// if right is occupied by friendly unit OR
+					// if right is not passable
+					if((right!=-1)&&(this.navigationMap.get(Integer.valueOf(right)).isOccupied())&&(this.navigationMap.get(Integer.valueOf(right)).getOccupyingUnit().getPlayerID()!=u.getPlayerID())&&(this.navigationMap.get(Integer.valueOf(right)).isTraversible())){
+						Unit target = this.navigationMap.get(Integer.valueOf(right)).getOccupyingUnit();
+						legalActions.add(new UnitAction(u, UnitAction.right_attack,target));
+						System.out.println("Added right attack");
+					}
+					// Reject if forward is off the edge of the map OR
+					// if forward is not occupied OR
+					// if forward is occupied by friendly unit OR
+					// if forward is not passable
+					if((forward!=-1)&&(this.navigationMap.get(Integer.valueOf(forward)).isOccupied())&&(this.navigationMap.get(Integer.valueOf(forward)).getOccupyingUnit().getPlayerID()!=u.getPlayerID())&&(this.navigationMap.get(Integer.valueOf(forward)).isTraversible())){
+						Unit target = this.navigationMap.get(Integer.valueOf(forward)).getOccupyingUnit();
+						legalActions.add(new UnitAction(u, UnitAction.forward_attack,target));
+						System.out.println("Added forward attack");
+					}
+					// Reject if backward is off the edge of the map OR
+					// if backward is not occupied OR
+					// if backward is occupied by friendly unit OR
+					// if backward is not passable
+					if((backward!=-1)&&(this.navigationMap.get(Integer.valueOf(backward)).isOccupied())&&(this.navigationMap.get(Integer.valueOf(backward)).getOccupyingUnit().getPlayerID()!=u.getPlayerID())&&(this.navigationMap.get(Integer.valueOf(backward)).isTraversible())){
+						Unit target = this.navigationMap.get(Integer.valueOf(backward)).getOccupyingUnit();
+						legalActions.add(new UnitAction(u, UnitAction.backward_attack,target));
+						System.out.println("Added backward attack");
 					}
 					
 				}

@@ -98,6 +98,11 @@ public  class Unit{
 	{
 		return alive;
 	}
+	
+	public void setAlive(boolean alive)
+	{
+		this.alive = alive;
+	}
 
 	public boolean isHidden() {
 		return hidden;

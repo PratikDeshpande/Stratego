@@ -58,29 +58,31 @@ public class StrategoGraphicsPanel extends JPanel {
         System.out.println(units.get(0).getPlayerID());
         
         for(Unit u:units){
-        	if(u.getPlayerID()==1){
-        		if(u.isHidden()){
-        			g.setColor(Color.BLUE);
-        		}
-        		else{
-            		g.setColor(Color.RED);
-        		}
-        		g.fillOval(xStart + (9-u.getX()) + ((9-u.getX())*(length+gap)), yStart+u.getY()+(u.getY()*(length+gap)), length, length);
-        		g.setColor(Color.WHITE);
-        		g.drawString(Integer.toString(u.getRank()), xStart+ (length/2)+ (9-u.getX()) + ((9-u.getX())*(length+gap)), yStart+(length/2)+u.getY()+(u.getY()*(length+gap)));
-        	}
-        	if(u.getPlayerID()==2){
-        		if(u.isHidden()){
-        			g.setColor(Color.BLACK);
-        		}
-        		else{
-        			g.setColor(Color.YELLOW);
-        		}
-        		g.fillOval(xStart + (u.getX()) + (u.getX()*(length+gap)), yStart+(9-u.getY())+((9-u.getY())*(length+gap)), length, length);
-        		g.setColor(Color.WHITE);
-        		g.drawString(Integer.toString(u.getRank()), xStart + (length/2)+ (u.getX()) + (u.getX()*(length+gap)), yStart+ (length/2)+(9-u.getY())+((9-u.getY())*(length+gap)));
-
-        		
+        	if(u.getAlive()){
+	        	if(u.getPlayerID()==1){
+	        		if(u.isHidden()){
+	        			g.setColor(Color.BLUE);
+	        		}
+	        		else{
+	            		g.setColor(Color.RED);
+	        		}
+	        		g.fillOval(xStart + (9-u.getX()) + ((9-u.getX())*(length+gap)), yStart+u.getY()+(u.getY()*(length+gap)), length, length);
+	        		g.setColor(Color.WHITE);
+	        		g.drawString(Integer.toString(u.getRank()), xStart+ (length/2)+ (9-u.getX()) + ((9-u.getX())*(length+gap)), yStart+(length/2)+u.getY()+(u.getY()*(length+gap)));
+	        	}
+	        	if(u.getPlayerID()==2){
+	        		if(u.isHidden()){
+	        			g.setColor(Color.BLACK);
+	        		}
+	        		else{
+	        			g.setColor(Color.YELLOW);
+	        		}
+	        		g.fillOval(xStart + (u.getX()) + (u.getX()*(length+gap)), yStart+(9-u.getY())+((9-u.getY())*(length+gap)), length, length);
+	        		g.setColor(Color.WHITE);
+	        		g.drawString(Integer.toString(u.getRank()), xStart + (length/2)+ (u.getX()) + (u.getX()*(length+gap)), yStart+ (length/2)+(9-u.getY())+((9-u.getY())*(length+gap)));
+	
+	        		
+	        	}
         	}
         	
         	
