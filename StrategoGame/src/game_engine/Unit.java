@@ -40,6 +40,7 @@ public  class Unit{
 	}
 */
 	
+	//TODO See if y++ is up or down
 	public void up(){
 		y++;
 	}

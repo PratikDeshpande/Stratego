@@ -1,6 +1,7 @@
 package game_engine;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
 
 /*
@@ -41,7 +42,7 @@ public class GameState {
 
 
 	// This is the terrain of Stratego. 0 is traversible and 1 is not
-	private int[] map =    {0,0,0,0,0,0,0,0,0,0,
+	private final int[] map =    {0,0,0,0,0,0,0,0,0,0,
 				0,0,0,0,0,0,0,0,0,0,
 				0,0,0,0,0,0,0,0,0,0, 
 				0,0,0,0,0,0,0,0,0,0,
@@ -52,9 +53,9 @@ public class GameState {
 				0,0,0,0,0,0,0,0,0,0, 
 				0,0,0,0,0,0,0,0,0,0 };
 	
-	// This is used to find legal actions. Shows which spot of the map is occupied
-	private int[] occupancyMap = new int[100]; // 0: empty, 1: player 1, 2: player 2 is occupying
-
+	//private ArrayList<MapNode> navigationMap;
+	private HashMap<Integer,MapNode> navigationMap;
+	
 	
 	// List of all units on the map
 	private ArrayList<Unit> units;
@@ -75,28 +76,25 @@ public class GameState {
 		this.units.addAll(player1.getUnits());
 		this.units.addAll(player2.getUnits());
 		
-		// Fill the occupancy map
-		
-		// First fill it with all 0s
-		for(int i:occupancyMap){
-			i = 0;
+		// Populate the Navigation Map with units.
+		this.navigationMap = new HashMap<Integer,MapNode>();//new ArrayList<MapNode>();
+		for( int i=0;i<map.length;i++){
+			
+			if(map[i]==0){
+				this.navigationMap.put(new Integer(i), new MapNode(true));
+			//	this.navigationMap.add(new MapNode(i,true));
+			}
+			else{
+				this.navigationMap.put(new Integer(i),new MapNode(false));
+			}
 		}
-		// Now mark spots occupied with Player 1's Units with a '1'
-		// and mark spots occupied with Player 2's Units with a '2'
+		//System.out.println("navMap size: " + this.navigationMap.size() );
 		for(Unit u:this.units){
-			if(u.getPlayerID()==1){
-				int index = this.getUnitIndex(u);
-			//	System.out.println(index);
-				occupancyMap[index] = 1;
-			}
-			if(u.getPlayerID()==2){
-				int index = this.getUnitIndex(u);
-				//System.out.println(index);
-				occupancyMap[index] = 2;
-			}
+			
+			int index = this.getUnitIndex(u);
+			this.navigationMap.get(new Integer(index)).setOccupyingUnit(u);
 		}
-
-		
+				
 		
 		//System.out.println(this.units.get(0).getPlayerID()); // This 0 when it should be 1 or 2
 	//	System.out.println("num legal actions 1: " + this.getLegalActions(1).size());
@@ -134,7 +132,8 @@ public class GameState {
 	// Performs a UnitAction
 	public void performAction(UnitAction action){
 		
-		occupancyMap[ this.getUnitIndex(action.getUnit())] = 0;
+		
+		this.navigationMap.get(Integer.valueOf(this.getUnitIndex(action.getUnit()))).setOccupyingUnit(null);
 
 		if(action.getAction()==UnitAction.forward){
 			
@@ -151,7 +150,7 @@ public class GameState {
 			action.getUnit().left();
 		}
 		
-		occupancyMap[ this.getUnitIndex(action.getUnit())] = action.getUnit().getPlayerID();
+		this.navigationMap.get(Integer.valueOf(this.getUnitIndex(action.getUnit()))).setOccupyingUnit(action.getUnit());
 
 
 	}
@@ -200,6 +199,7 @@ public class GameState {
 		
 	}
 	
+	// TODO: Make it return an array that represents occupied blocks as well
 	public int[] getMap()
 	{
 		return this.map;
@@ -269,30 +269,25 @@ public class GameState {
 					// Check the occupancy array to see if adjacent spot is occupied
 					// Reject if left is off the edge of the map OR
 					// if left is occupied by unit 
-					if((left!=-1)&&(occupancyMap[left]==0)&&(map[left]==0)){
+					if((left!=-1)&&(!this.navigationMap.get(Integer.valueOf(left)).isOccupied())&&(this.navigationMap.get(Integer.valueOf(left)).isTraversible())){
 						legalActions.add(new UnitAction(u, UnitAction.left));
-					//	System.out.println("Added left");
 					}
 					// Reject if right is off the edge of the map OR
 					// if right is occupied by unit
-					if((right!=-1)&&(occupancyMap[right]==0)&&(map[right]==0)){
+					if((right!=-1)&&(!this.navigationMap.get(Integer.valueOf(right)).isOccupied())&&(this.navigationMap.get(Integer.valueOf(right)).isTraversible())){
 						legalActions.add(new UnitAction(u, UnitAction.right));
-					//	System.out.println("Added right");
 
 					}
 					// Reject if left is off the edge of the map OR
 					// if left is occupied by unit 
-					if((forward!=-1)&&(occupancyMap[forward]==0)&&(map[forward]==0)){
+					if((forward!=-1)&&(!this.navigationMap.get(Integer.valueOf(forward)).isOccupied())&&(this.navigationMap.get(Integer.valueOf(forward)).isTraversible())){
 						legalActions.add(new UnitAction(u, UnitAction.forward));
-					//	System.out.println("Added forward");
 
 					}
 					// Reject if right is off the edge of the map OR
 					// if right is occupied by unit
-					if((backward!=-1)&&(occupancyMap[backward]==0)&&(map[backward]==0)){
+					if((backward!=-1)&&(!this.navigationMap.get(Integer.valueOf(backward)).isOccupied())&&(this.navigationMap.get(Integer.valueOf(backward)).isTraversible())){
 						legalActions.add(new UnitAction(u, UnitAction.backward));
-					//	System.out.println("Added backward");
-
 					}
 					
 					// These are attack actions. Here we check to see if the adjacent spot on the
@@ -302,10 +297,15 @@ public class GameState {
 					// if left is not occupied OR
 					// if left is occupied by friendly unit OR
 					// if left is not passable
-					if((left!=-1)&&(occupancyMap[left]!=0)&&(occupancyMap[left]!=u.getPlayerID())&&(map[left]==0)){
+			/*		if((left!=-1)&&(occupancyMap[left]!=0)&&(occupancyMap[left]!=u.getPlayerID())&&(map[left]==0)){
 						Unit target = null; // Find the actual unit that is occupying left
 						legalActions.add(new UnitAction(u, UnitAction.left_attack,target));
 					//	System.out.println("Added left");
+					} */
+					if((left!=-1)&&(this.navigationMap.get(Integer.valueOf(left)).isOccupied())&&(this.navigationMap.get(Integer.valueOf(left)).getOccupyingUnit().getPlayerID()!=u.getPlayerID())&&(this.navigationMap.get(Integer.valueOf(left)).isTraversible())){
+						Unit target = this.navigationMap.get(Integer.valueOf(left)).getOccupyingUnit();
+						legalActions.add(new UnitAction(u, UnitAction.left_attack,target));
+						System.out.println("Added left attack");
 					}
 					
 				}
@@ -331,4 +331,11 @@ public class GameState {
 
 	
 	//getEnemyUnits 
+	
+	/*private class MapNode{
+		
+		public MapNode()
+		
+	}*/
+	
 }
