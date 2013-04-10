@@ -24,7 +24,7 @@ public  class Unit{
 	
 	//NOTE: Move this action to the GameState class
 	// Be sure to update occupancyMap as well
-	public void performAction(int action){
+/*	public void performAction(int action){
 		if(action==UnitAction.forward){
 			this.up();
 		}
@@ -38,6 +38,7 @@ public  class Unit{
 			this.left();
 		}
 	}
+*/
 	
 	public void up(){
 		y++;

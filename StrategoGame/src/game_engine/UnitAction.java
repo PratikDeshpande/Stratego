@@ -3,6 +3,7 @@ package game_engine;
 public class UnitAction {
 	private Unit unit;
 	private int action;
+	private Unit target; // Can be null if there is no target
 	
 	// Neutral Movement Actions
 	public static final int forward = 0;
@@ -17,9 +18,14 @@ public class UnitAction {
 	public static final int left_attack = 7;
 
 	
+	public UnitAction(Unit u, int action, Unit target){
+		this.unit = u;
+		this.action = action;
+		this.target = target;
+	}
+	
 	public UnitAction(Unit u, int action){
-		this.setUnit(u);
-		this.setAction(action);
+		this(u,action,null);
 	}
 
 
