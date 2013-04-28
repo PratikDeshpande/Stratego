@@ -68,7 +68,32 @@ public class StrategoGraphicsPanel extends JPanel {
 	        		}
 	        		g.fillOval(xStart + (9-u.getX()) + ((9-u.getX())*(length+gap)), yStart+u.getY()+(u.getY()*(length+gap)), length, length);
 	        		g.setColor(Color.WHITE);
-	        		g.drawString(Integer.toString(u.getRank()), xStart+ (length/2)+ (9-u.getX()) + ((9-u.getX())*(length+gap)), yStart+(length/2)+u.getY()+(u.getY()*(length+gap)));
+	        		if(u.getRank()<=GameState.SERGEANT){
+	        			g.drawString(Integer.toString(u.getRank()), xStart+ (length/2)+ (9-u.getX()) + ((9-u.getX())*(length+gap)), yStart+(length/2)+u.getY()+(u.getY()*(length+gap)));
+
+	        		}
+	        		// Modify DrawString to have alphabet for special characters
+	        		if(u.getRank()==GameState.MINER){
+		        		g.drawString("M", xStart+ (length/2)+ (9-u.getX()) + ((9-u.getX())*(length+gap)), yStart+(length/2)+u.getY()+(u.getY()*(length+gap)));
+
+	        		}
+	        		if(u.getRank()==GameState.SCOUT){
+		        		g.drawString("Sc", xStart+ (length/2)+ (9-u.getX()) + ((9-u.getX())*(length+gap)), yStart+(length/2)+u.getY()+(u.getY()*(length+gap)));
+
+	        		}
+	        		if(u.getRank()==GameState.SPY){
+		        		g.drawString("Sp", xStart+ (length/2)+ (9-u.getX()) + ((9-u.getX())*(length+gap)), yStart+(length/2)+u.getY()+(u.getY()*(length+gap)));
+
+	        		}
+	        		if(u.getRank()==GameState.BOMB){
+		        		g.drawString("B", xStart+ (length/2)+ (9-u.getX()) + ((9-u.getX())*(length+gap)), yStart+(length/2)+u.getY()+(u.getY()*(length+gap)));
+
+	        		}
+	        		if(u.getRank()==GameState.FLAG){
+		        		g.drawString("F", xStart+ (length/2)+ (9-u.getX()) + ((9-u.getX())*(length+gap)), yStart+(length/2)+u.getY()+(u.getY()*(length+gap)));
+
+	        		}
+
 	        	}
 	        	if(u.getPlayerID()==2){
 	        		if(u.isHidden()){
@@ -79,7 +104,32 @@ public class StrategoGraphicsPanel extends JPanel {
 	        		}
 	        		g.fillOval(xStart + (u.getX()) + (u.getX()*(length+gap)), yStart+(9-u.getY())+((9-u.getY())*(length+gap)), length, length);
 	        		g.setColor(Color.WHITE);
-	        		g.drawString(Integer.toString(u.getRank()), xStart + (length/2)+ (u.getX()) + (u.getX()*(length+gap)), yStart+ (length/2)+(9-u.getY())+((9-u.getY())*(length+gap)));
+	        		if(u.getRank()<=GameState.SERGEANT){
+	    	        	g.drawString(Integer.toString(u.getRank()), xStart + (length/2)+ (u.getX()) + (u.getX()*(length+gap)), yStart+ (length/2)+(9-u.getY())+((9-u.getY())*(length+gap)));
+
+	        		}
+	        		// Modify DrawString to have alphabet for special characters
+	        		if(u.getRank()==GameState.MINER){
+	    	        	g.drawString("M", xStart + (length/2)+ (u.getX()) + (u.getX()*(length+gap)), yStart+ (length/2)+(9-u.getY())+((9-u.getY())*(length+gap)));
+
+	        		}
+	        		if(u.getRank()==GameState.SCOUT){
+	    	        	g.drawString("Sc", xStart + (length/2)+ (u.getX()) + (u.getX()*(length+gap)), yStart+ (length/2)+(9-u.getY())+((9-u.getY())*(length+gap)));
+
+	        		}
+	        		if(u.getRank()==GameState.SPY){
+	    	        	g.drawString("Sp", xStart + (length/2)+ (u.getX()) + (u.getX()*(length+gap)), yStart+ (length/2)+(9-u.getY())+((9-u.getY())*(length+gap)));
+
+	        		}
+	        		if(u.getRank()==GameState.BOMB){
+	    	        	g.drawString("B", xStart + (length/2)+ (u.getX()) + (u.getX()*(length+gap)), yStart+ (length/2)+(9-u.getY())+((9-u.getY())*(length+gap)));
+
+	        		}
+	        		if(u.getRank()==GameState.FLAG){
+	    	        	g.drawString("F", xStart + (length/2)+ (u.getX()) + (u.getX()*(length+gap)), yStart+ (length/2)+(9-u.getY())+((9-u.getY())*(length+gap)));
+
+	        		}
+	        	//	g.drawString(Integer.toString(u.getRank()), xStart + (length/2)+ (u.getX()) + (u.getX()*(length+gap)), yStart+ (length/2)+(9-u.getY())+((9-u.getY())*(length+gap)));
 	
 	        		
 	        	}

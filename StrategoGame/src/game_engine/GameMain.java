@@ -11,14 +11,16 @@ import javax.swing.JPanel;
 
 
 public class GameMain {
+	//public GameState gs;
 	public static void main(String args[])
 	{
 		
 				
 		Player p1 = new PlayerExample(1);
-		Player p2 = new PlayerExample2(2);
+		Player p2 = new PlayerExample(2);
 		GameState gs = new GameState(p1, p2);
 		//Player asdf = new PlayerExample();
+		
 		
 		
 		// Starts Frame and graphics panel
@@ -28,12 +30,35 @@ public class GameMain {
 		
 		StrategoGraphicsPanel graphicsPanel = new StrategoGraphicsPanel(gs);
 		
+		
+		
 		mainFrame.add(graphicsPanel);
 		mainFrame.pack();
 		mainFrame.setVisible(true);
 		
 		
+	
+		
+		int numTurns = 10;
+		for(int t=0;t<numTurns;t++){
+			if(!gs.gameOver)
+			//	gs.update();
+			//	graphicsPanel.repaint();
+			//	System.out.println("Update");
+				try {
+					gs.update();
+					graphicsPanel.repaint();
+					Thread.sleep(1000);
+
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+	} 
+		
+		
 		
 	}
 
-}
+

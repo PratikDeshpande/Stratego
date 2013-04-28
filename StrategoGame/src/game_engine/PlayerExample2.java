@@ -1,6 +1,7 @@
 package game_engine;
 
 import java.util.ArrayList;
+import java.util.Random;
 
 public class PlayerExample2 extends Player {
 
@@ -12,7 +13,7 @@ public class PlayerExample2 extends Player {
 	public void initializePos(){
 		
 		// Unit(playerID, x, y, rank
-		/*
+		
 		this.getUnits().add(new Unit(playerID,0, 0, 12)); //  flag
 		this.getUnits().add(new Unit(playerID,1, 0, 11)); //   bomb
 		this.getUnits().add(new Unit(playerID,2, 0, 11)); //    bomb
@@ -62,13 +63,13 @@ public class PlayerExample2 extends Player {
 		this.getUnits().add(new Unit(playerID,7, 3, 3)); //    colonel
 		this.getUnits().add(new Unit(playerID,8, 3, 2)); //    general
 		this.getUnits().add(new Unit(playerID,9, 3, 1)); //    marshal
-		*/
+		
 		
 		// This line is for testing
-		this.getUnits().add(new Unit(playerID,4,7,7));
+	/*	this.getUnits().add(new Unit(playerID,4,7,7));
 		this.getUnits().add(new Unit(playerID,5,8,7));
 		this.getUnits().add(new Unit(playerID,6,7,12));
-		this.getUnits().add(new Unit(playerID,5,6,7)); 
+		this.getUnits().add(new Unit(playerID,5,6,7)); */
 		
 	//	this.getUnits().add(new Unit(playerID,1,1,7));
 
@@ -78,7 +79,12 @@ public class PlayerExample2 extends Player {
 	public UnitAction nextMove(GameState gs) {
 		// TODO Auto-generated method stub
 		ArrayList<UnitAction> legalActions = gs.getLegalActions(this.getPlayerID()); // Change object so that playerID is automatic
-		return legalActions.get(0);
+		
+		// return random legal action
+		Random randomGenerator = new Random();
+		
+		int randInt = randomGenerator.nextInt(legalActions.size());
+		return legalActions.get(randInt);
 	}
 
 }

@@ -43,19 +43,20 @@ public class GameState {
 	public int winningPlayer;
 
 	// This is the terrain of Stratego. 0 is traversible and 1 is not
-	private final int[] map =    {0,0,0,0,0,0,0,0,0,0,
+	private final int[] map = 
+			{   0,0,0,0,0,0,0,0,0,0,
 				0,0,0,0,0,0,0,0,0,0,
 				0,0,0,0,0,0,0,0,0,0, 
 				0,0,0,0,0,0,0,0,0,0,
-				0,0,0,0,0,0,0,0,0,0, // For testing we are removing the lakes in the middle
-				0,0,0,0,0,0,0,0,0,0,
+				0,0,1,1,0,0,1,1,0,0, // For testing we are removing the lakes in the middle
+				0,0,1,1,0,0,1,1,0,0,
 				0,0,0,0,0,0,0,0,0,0, 
 				0,0,0,0,0,0,0,0,0,0,
 				0,0,0,0,0,0,0,0,0,0, 
 				0,0,0,0,0,0,0,0,0,0 };
 	
 	//private ArrayList<MapNode> navigationMap;
-	private HashMap<Integer,MapNode> navigationMap;
+	private HashMap<Integer,MapNode> navigationMap; 
 	
 	
 	// List of all units on the map
@@ -64,10 +65,15 @@ public class GameState {
 	// The two AI agents who are playing the game 
 	private Player player1,player2;
 
+	// The most recent move made
+	private UnitAction mostRecentAction;
 
 
 	//Initialize everything. 
 	public GameState(Player player1, Player player2){
+		// Game will keep going until gameOver is true. gameOver should become true when
+		// 1. A player captures a flag OR
+		// 2. When a player has No Legal Actions //TODO
 		this.gameOver = false;
 		
 		// Initialize the 2 players
@@ -85,51 +91,21 @@ public class GameState {
 			
 			if(map[i]==0){
 				this.navigationMap.put(new Integer(i), new MapNode(true));
-			//	this.navigationMap.add(new MapNode(i,true));
 			}
 			else{
 				this.navigationMap.put(new Integer(i),new MapNode(false));
 			}
 		}
-		//System.out.println("navMap size: " + this.navigationMap.size() );
 		for(Unit u:this.units){
 			
 			int index = this.getUnitIndex(u);
 			this.navigationMap.get(new Integer(index)).setOccupyingUnit(u);
 		}
 				
-		
-		//System.out.println(this.units.get(0).getPlayerID()); // This 0 when it should be 1 or 2
-	//	System.out.println("num legal actions 1: " + this.getLegalActions(1).size());
-	//	System.out.println("num legal actions 2: " + this.getLegalActions(2).size());
-		
-		// Once instantuated, keep running Update (wait a few seconds)
-	/*	while(true){
-			this.update();
-			try {
-				Thread.sleep(1000);
-			} catch (InterruptedException e) {
-				
-				e.printStackTrace();
-			} 
-		} */
-		this.update();
-	/*	for(int i=0;i<100;i++){
-		
-			if(this.navigationMap.get(Integer.valueOf(i)).getOccupyingUnit()==null){
-				System.out.println(i + ": null");
-			}
-			else{
-				System.out.println(i +" is occupied ");		
-			}
-		} */
-	//	this.update();
-	//	this.update();
-
 	}
 	
 	// Set's the unit's x and y coordinates to the given int tile target location TODO test edge cases, verify
-	public void setTargetLocation(Unit u, int tile){
+	private void setTargetLocation(Unit u, int tile){
 		int x,y;
 		if(u.getPlayerID()==1){
 			x = 9-(tile%10); // 9-
@@ -145,8 +121,7 @@ public class GameState {
 	}
 	
 	// Returns the Unit's index location on map.
-	public int getUnitIndex(Unit u){
-		//int raster = 
+	private int getUnitIndex(Unit u){
 		if(u.getPlayerID()==1){
 			return ((9-u.getX())+(u.getY()*10));
 		}
@@ -157,12 +132,16 @@ public class GameState {
 		return -1;
 	}
 	
-	public int getUnitAdjacentIndex(Unit u,int dx, int dy){
+	// Returns the map index for the grid dx to the right and dy up. Also handles edge cases
+	private int getUnitAdjacentIndex(Unit u,int dx, int dy){
+		
 		int x = u.getX()+dx;
 		int y = u.getY()+dy;
 		
+		
+
 		// IF the the spot dx dy from u is off the edge, return -1
-		if((x<0)||(y<0)){
+		if((x<0)||(y<0)||(x>9)||(y>9)){
 			return -1;
 		}
 		if(u.getPlayerID()==1){
@@ -175,40 +154,58 @@ public class GameState {
 		return -1;
 	}
 	
-	// Performs a UnitAction
-	public void performAction(UnitAction action){
+	//private int getTileAdjacentIndex(int playerID, int x, int y,)
+	
+	
+	// Modifies the GameState in accordance with the game rules in response to a UnitAction
+	private void executeAction(UnitAction action){
+		
+		this.setMostRecentAction(action);
 		
 		Unit u = action.getUnit();
 		int actionPerformed = action.getAction();
 		int targetTile = action.getTargetTile();
 		
+		// Print what the action is so users can know.
+		System.out.print("Player " + u.getPlayerID() + "'s " + u.getRank() + " at " + this.getUnitIndex(u));
+		
+		
+		
 		// This clears the unit's current location. No matter what the outcome, the unit's previous spot will now become unoccupied
 		this.navigationMap.get(Integer.valueOf(this.getUnitIndex(u))).setOccupyingUnit(null);
 
 		
-		// If the action performed is a MOVE 
+		// If the action performed is a MOVE
 		if(actionPerformed==UnitAction.move){
+			System.out.print(" moved to "+ targetTile +".\n");
+			// Update unit's location to reflect move. Navigation Map will be updated later in the code
 			this.setTargetLocation(u, targetTile); // TODO check edge cases for this function. verify if it works
 		}
 		
 		// If the action performed is an ATTACK
 		if(actionPerformed==UnitAction.attack){
-			
+
 			Unit target = action.getTarget();
-			// Removes target from map
-		//	this.navigationMap.get(Integer.valueOf(this.getUnitIndex(target))).setOccupyingUnit(null);
+			// Removes target from map. If the target is unharmed, the code will re-insert the target into the navigation map
+		
+			System.out.print(" attacked Player " + target.getPlayerID() + " 's " + target.getRank() + " at " + targetTile + ".\n" );
+
 			
-			//Unhides target
+			this.navigationMap.get(Integer.valueOf(this.getUnitIndex(target))).setOccupyingUnit(null);
+			
+			//Reveals target
 			target.setHidden(false);
-			//Unhides unit
+			//Reveals unit
 			u.setHidden(false);
 			// Check the rank of the target unit
 			int rank = target.getRank();
 			
 			// Handle special cases here
+			
+			// IF the target is a bomb, the unit dies unless the unit is a miner
 			if(rank==GameState.BOMB){
 				if(u.getRank()==GameState.MINER){
-					//Defuse mine
+					//Defuse bomb
 					target.setAlive(false);
 					this.setTargetLocation(u, this.getUnitIndex(target));
 				}
@@ -217,6 +214,7 @@ public class GameState {
 					u.setAlive(false);
 				}
 			}
+			// IF target is a flag, then game is over and unit's player has won
 			else if(rank==GameState.FLAG){
 				// kill flag
 				target.setAlive(false);
@@ -227,6 +225,7 @@ public class GameState {
 				this.winningPlayer = u.getPlayerID();
 				System.out.println("GAME OVER!!!\nPlayer "+this.winningPlayer+" has won the match!");
 			}
+			// IF target is a marshall, the unit dies unless the unit is a spy
 			else if(rank==GameState.MARSHAL){
 				if(u.getRank()==GameState.SPY){
 					// kill marshal
@@ -238,7 +237,8 @@ public class GameState {
 					u.setAlive(false);
 				}
 			}
-			else if(rank==GameState.SPY){
+			// IF target is a spy, then unit kills it, unless the unit is a marshall, then the unit dies
+		/*	else if(rank==GameState.SPY){
 				if(u.getRank()==GameState.MARSHAL){
 					// unit dies
 					u.setAlive(false);
@@ -248,151 +248,37 @@ public class GameState {
 					target.setAlive(false);
 					this.setTargetLocation(u, this.getUnitIndex(target));
 				}
-			}
-			// now, if the rank value is lower ( meaning the target has higher rank), the unit dies
+			} */ // Spy can be killed by marshal
+			// IF target has a lower rank value, it is a stronger than the unit, thus the unit dies
 			else if(rank<u.getRank()){
 				// unit dies
 				u.setAlive(false);
 			}
+			// IF target and unit have same rank value, then they both die
 			else if(rank==u.getRank()){
 				// both die
 				u.setAlive(false);
 				target.setAlive(false);
 			}
+			// IF target has a higher rank value, then it dies
 			else if(rank>u.getRank()){
 				// target dies
 				target.setAlive(false);
 				this.setTargetLocation(u, this.getUnitIndex(target));
 			}
 			
-			// if target is alive, update navigation map
+			// IF target is alive, update navigation map with target's location
 			if(target.getAlive()){
 				this.navigationMap.get(Integer.valueOf(this.getUnitIndex(target))).setOccupyingUnit(target);
 			}
 			
 		}
 		
-		/*
-		// If regular motion. Already checked edge cases
-		if(actionPerformed==UnitAction.forward){
-			u.up();
-		}
-		if(actionPerformed==UnitAction.backward){
-			u.down();
-		}
-		if(actionPerformed==UnitAction.right){
-			u.right();
-		}
-		if(actionPerformed==UnitAction.left){
-			u.left();
-		}
-		*/
-
-		/*
-		// If the action performed is an ATTACK
-		if((actionPerformed==UnitAction.left_attack)||(actionPerformed==UnitAction.right_attack)||(actionPerformed==UnitAction.forward_attack)||(actionPerformed==UnitAction.backward_attack)){
-			
-			Unit target = action.getTarget();
-			// Removes target from map
-			this.navigationMap.get(Integer.valueOf(this.getUnitIndex(target))).setOccupyingUnit(null);
-			
-			//Unhides target
-			target.setHidden(false);
-			//Unhides unit
-			u.setHidden(false);
-			// Check the rank of the target unit
-			int rank = target.getRank();
-			//TODO include logic for special units
-			
-			// Handle special cases here
-			if(rank==GameState.BOMB){
-				if(u.getRank()==GameState.MINER){
-					//Defuse mine
-				}
-				else{
-					// Unit dies
-				}
-			}
-			if(rank==GameState.FLAG){
-				// Unit's player wins
-			}
-			if(rank==GameState.MARSHAL){
-				if(u.getRank()==GameState.SPY){
-					// kill marshal
-				}
-				else{
-					// Unit dies
-				}
-			}
-			
-			// Target is higher ranked, so attack fails and unit dies
-			if(rank<u.getRank()){
-				System.out.println("Target rank is higher");
-				// Check to see if target is a mine. If it is a mine, then only miner doesn't die
-				if(rank==GameState.BOMB){
-					if(u.getRank()==GameState.MINER){
-						// Defuse mine
-						target.setAlive(false);
-
-						if(actionPerformed==UnitAction.left_attack){
-							u.left();
-						}
-						if(actionPerformed==UnitAction.right_attack){
-							u.right();
-						}
-						if(actionPerformed==UnitAction.forward_attack){
-							u.up();
-						}
-						if(actionPerformed==UnitAction.backward_attack){
-							u.down();
-						}
-					}
-					else{
-						u.setAlive(false);
-					}
-				}
-				else{
-					// target stays in same location, unit dies
-					u.setAlive(false);
-				}
-			}
-			if(rank==u.getRank()){
-				System.out.println("Target rank is equal");
-				u.setAlive(false);
-				target.setAlive(false);
-			}
-			if(rank>u.getRank()){
-				// If target is lower ranked than unit
-				System.out.println("Target rank is lower");
-				
-				target.setAlive(false);
-
-				if(actionPerformed==UnitAction.left_attack){
-					u.left();
-				}
-				if(actionPerformed==UnitAction.right_attack){
-					u.right();
-				}
-				if(actionPerformed==UnitAction.forward_attack){
-					u.up();
-				}
-				if(actionPerformed==UnitAction.backward_attack){
-					u.down();
-				}
-			}
-			
-			if(target.getAlive()){
-				this.navigationMap.get(Integer.valueOf(this.getUnitIndex(target))).setOccupyingUnit(target);
-			}
-			
-		}
-		*/
-		// IF it is still alive, if not, it has already been cleared from map. just don't put it back on the map
+		// IF unit is still alive, update its location on the navigation map. 
 		if(u.getAlive()){
 			this.navigationMap.get(Integer.valueOf(this.getUnitIndex(u))).setOccupyingUnit(u);
 		}
 
-		
 
 
 	}
@@ -409,43 +295,60 @@ public class GameState {
 		} */
 
 		
-		
-		// Retrieve Player 1's Next Move.
-	//	UnitAction p1Action = player1.nextMove(this);
-		UnitAction p1Action = this.getLegalActions(player1.playerID).get(0); // For Testing Purposes
-
-		// Implement Player 1's Move.
-		
-			// Loops through Units to find Unit that performs move. 
-		for(Unit u:this.units){
+		// Checks to see if Player 1 has any legal moves. If not, player 1 loses.
+		if(this.getLegalActions(player1.getPlayerID()).isEmpty()){
+			this.gameOver=true;
+			this.winningPlayer = player2.getPlayerID();			
+			System.out.println("GAME OVER!!!\nPlayer "+this.winningPlayer+" has won the match!");
+			return;
+		}
+		else{		
+			// Retrieve Player 1's Next Move.
+			UnitAction p1Action = player1.nextMove(this);
+		//	UnitAction p1Action = this.getLegalActions(player1.playerID).get(0); // For Testing Purposes
+	
+			// Implement Player 1's Move.
 			
-			if(u.equals(p1Action.getUnit())){
+				// Loops through Units to find Unit that performs move. 
+			for(Unit u:this.units){
 				
-				// Perform the action
-				this.performAction(p1Action);				
-				
-				
-			}
-		} 
-		/*
-		//	UnitAction p2Action = this.getLegalActions(2).get(0);
-
-		// Retrieve Player 2's Next Move
-		UnitAction p2Action = player2.nextMove(this);
-
-		// Implement Player 2's Next Move.
-		
-			// Loops through Units to find Unit that performs move.
-		for(Unit u:this.units){
-			if(u.equals(p2Action.getUnit())){
-				
-				// Perform the action
-				this.performAction(p2Action);
-				
-				
+				if(u.equals(p1Action.getUnit())){
+					
+					// execute the action
+					this.executeAction(p1Action);				
+					
+					
+				}
 			}
 		}
-		*/
+		
+		//	UnitAction p2Action = this.getLegalActions(2).get(0);
+
+		// Checks to see if Player 2 has any legal moves. If not, player 2 loses.
+		if(this.getLegalActions(player2.getPlayerID()).isEmpty()){
+			this.gameOver=true;
+			this.winningPlayer = player1.getPlayerID();			
+			System.out.println("GAME OVER!!!\nPlayer "+this.winningPlayer+" has won the match!");
+			return;
+		}
+		else{
+			// Retrieve Player 2's Next Move
+			UnitAction p2Action = player2.nextMove(this);
+	
+			// Implement Player 2's Next Move.
+			
+				// Loops through Units to find Unit that performs move.
+			for(Unit u:this.units){
+				if(u.equals(p2Action.getUnit())){
+					
+					// execute the action
+					this.executeAction(p2Action);
+					
+					
+				}
+		}
+		}
+		
 
 		
 	}
@@ -453,8 +356,8 @@ public class GameState {
 	// TODO: Make it return an array that represents occupied blocks as well
 	public int[] getMap()
 	{
-		return this.map;
-	}
+		return this.map; 
+	} 
 	
 	// Gives all legal actions available to player
 	public ArrayList<UnitAction> getLegalActions(int playerID){
@@ -464,10 +367,7 @@ public class GameState {
 		
 		// Cycle through all of the player's units and find legal actions
 		for(Unit u:this.units){
-			
-		//	int x = u.getX();
-		//	int y = u.getY();
-			
+						
 			// Checks to see if unit belongs to player
 			if(u.getPlayerID()==playerID){
 				
@@ -490,37 +390,7 @@ public class GameState {
 					// NOTE: Did edge case testing on getUnitAdjacentIndex. It works!
 					
 					
-					// Calculates the raster value for the adjacent spots (used for occupancyArray
-					// TODO: Use raster function
-			/*		if(playerID==1){
-						left = (y*10)+(9-x+1);
-						forward = ((y+1)*10)+(9-x);
-						right = (y*10)+(9-x-1);
-						backward = ((y-1)*10)+(9-x);
-					}
-					else{
-						left = ((9-y)*10)+(x-1);
-						forward = ((9-y-1)*10)+x;
-						right = ((9-y)*10)+(x+1);
-						backward = ((9-y+1)*10)+x;
-					}
-					
-					// Find out if u is on the edge
-					if(x==0){
-						left = -1;
-					}
-					if(x==9){
-						right = -1;
-					}
-					if(y==0){
-						backward = -1;
-					}
-					if(y==9){
-						forward = -1;
-					}
-					
-					*/
-					
+					// For testing purposes
 				/*	System.out.println("forward: "+forward);
 					System.out.println("right: "+right);
 					System.out.println("left: "+left);
@@ -593,14 +463,184 @@ public class GameState {
 					
 				}
 				
+				// IF unit is a Scout
+				if(u.getRank()==GameState.SCOUT){
+					
+					// In all 4 directions, go until it runs into
+					//	1. Edge OR
+					//	2. Enemy Unit OR
+					//	3. Non Traversible Terrain 
+					
+					// Will store the adjacent index values
+				/*	ArrayList<Integer> lefts = new ArrayList<Integer>();
+					ArrayList<Integer> rights = new ArrayList<Integer>();
+					ArrayList<Integer> ups = new ArrayList<Integer>();
+					ArrayList<Integer> downs = new ArrayList<Integer>(); */
+					
+					// Finds the adjacent spots in respective directions.
+					// Stop when you
+					// 1. reach the edge of map OR
+					// 2. reach impassable terrain OR
+					// 3. reach a friendly unit OR
+					// 4. reach an enemy unit (but add it to arraylist)
+					int dx, dy;
+					
+					// Left
+					dx = -1;
+					dy = 0;
+					int immLeft = this.getUnitAdjacentIndex(u, dx, dy);
+					// While relevant tile is not off the map
+					while((immLeft>-1)){
+						
+						//if adjacent tile is impassable then break
+						if(!this.navigationMap.get(Integer.valueOf(immLeft)).isTraversible()){
+							break;
+						}
+						
+						// if the tile is occupied by friendly unit, then break
+						if(this.navigationMap.get(Integer.valueOf(immLeft)).isOccupied()){
+							if(this.navigationMap.get(Integer.valueOf(immLeft)).getOccupyingUnit().getPlayerID()==u.getPlayerID()){
+								break;
+							}
+							// if the tile is occupied by an enemy unit, add an attack action and THEN break
+							if(this.navigationMap.get(Integer.valueOf(immLeft)).getOccupyingUnit().getPlayerID()==u.getPlayerID()){
+								Unit target = this.navigationMap.get(Integer.valueOf(immLeft)).getOccupyingUnit();
+								legalActions.add(new UnitAction(u, UnitAction.attack,immLeft,target));
+								
+								break;
+							}
+						} 						
+						legalActions.add(new UnitAction(u, UnitAction.move, immLeft));
+						dx=dx-1; // move left one
+						immLeft = this.getUnitAdjacentIndex(u, dx, dy);					
+					}
+					
+					
+					
+					// Right
+					dx = 1;
+					dy = 0;
+					int immRight = this.getUnitAdjacentIndex(u, dx, dy);
+					// While relevant tile is not off the map
+					while((immRight>-1)){
+						
+						//if adjacent tile is impassable then break
+						if(!this.navigationMap.get(Integer.valueOf(immRight)).isTraversible()){
+							break;
+						}
+						
+						// if the tile is occupied by friendly unit, then break
+						if(this.navigationMap.get(Integer.valueOf(immRight)).isOccupied()){
+							if(this.navigationMap.get(Integer.valueOf(immRight)).getOccupyingUnit().getPlayerID()==u.getPlayerID()){
+								break;
+							}
+							// if the tile is occupied by an enemy unit, add an attack action and THEN break
+							if(this.navigationMap.get(Integer.valueOf(immRight)).getOccupyingUnit().getPlayerID()==u.getPlayerID()){
+								Unit target = this.navigationMap.get(Integer.valueOf(immRight)).getOccupyingUnit();
+								legalActions.add(new UnitAction(u, UnitAction.attack,immRight,target));
+								
+								break;
+							}
+						} 						
+
+						legalActions.add(new UnitAction(u, UnitAction.move, immRight));
+						dx=dx+1; // move right one
+						immRight = this.getUnitAdjacentIndex(u, dx, dy);					
+					}
+					
+					
+					// Up
+					dx = 0;
+					dy = 1;
+					int immUp = this.getUnitAdjacentIndex(u, dx, dy);
+					// While relevant tile is not off the map
+					while((immUp>-1)){
+						
+						//if adjacent tile is impassable then break
+						if(!this.navigationMap.get(Integer.valueOf(immUp)).isTraversible()){
+							break;
+						}
+						
+						// if the tile is occupied by friendly unit, then break
+						if(this.navigationMap.get(Integer.valueOf(immUp)).isOccupied()){
+							if(this.navigationMap.get(Integer.valueOf(immUp)).getOccupyingUnit().getPlayerID()==u.getPlayerID()){
+								break;
+							}
+							// if the tile is occupied by an enemy unit, add an attack action and THEN break
+							if(this.navigationMap.get(Integer.valueOf(immUp)).getOccupyingUnit().getPlayerID()==u.getPlayerID()){
+								Unit target = this.navigationMap.get(Integer.valueOf(immUp)).getOccupyingUnit();
+								legalActions.add(new UnitAction(u, UnitAction.attack,immUp,target));
+								
+								break;
+							}
+						} 						
+
+						legalActions.add(new UnitAction(u, UnitAction.move, immUp));
+						dy=dy+1; // move up one
+						immUp = this.getUnitAdjacentIndex(u, dx, dy);					
+					}
+					
+					// Down
+					dx = 0;
+					dy = -1;
+					int immDown = this.getUnitAdjacentIndex(u, dx, dy);
+					// While relevant tile is not off the map
+					while((immDown>-1)){
+						
+						//if adjacent tile is impassable then break
+						if(!this.navigationMap.get(Integer.valueOf(immDown)).isTraversible()){
+							break;
+						}
+						
+						// if the tile is occupied by friendly unit, then break
+						if(this.navigationMap.get(Integer.valueOf(immDown)).isOccupied()){
+							if(this.navigationMap.get(Integer.valueOf(immDown)).getOccupyingUnit().getPlayerID()==u.getPlayerID()){
+								break;
+							}
+							// if the tile is occupied by an enemy unit, add an attack action and THEN break
+							if(this.navigationMap.get(Integer.valueOf(immDown)).getOccupyingUnit().getPlayerID()==u.getPlayerID()){
+								Unit target = this.navigationMap.get(Integer.valueOf(immDown)).getOccupyingUnit();
+								legalActions.add(new UnitAction(u, UnitAction.attack,immDown,target));
+								
+								break;
+							}
+						} 						
+
+						legalActions.add(new UnitAction(u, UnitAction.move, immDown));
+						dy=dy-1; // move up one
+						immDown = this.getUnitAdjacentIndex(u, dx, dy);					
+					}
+					
+					
+					
+				}
+				
 			}
 		}
+		
+		
 		return legalActions;
 	}
 
 	// Gives all enemy units (some may be hidden)
 	public ArrayList<Unit> getEnemyUnits(int playerID){
-		return null;
+		ArrayList<Unit> enemyUnits = new ArrayList<Unit>();
+		for(Unit u:this.getUnits()){
+			if(u.getPlayerID()!=playerID){
+				enemyUnits.add(u);
+			}
+		}
+		return enemyUnits;
+	}
+	
+	public ArrayList<Unit> getMyUnits(int playerID){
+		ArrayList<Unit> myUnits = new ArrayList<Unit>();
+		for(Unit u:this.getUnits()){
+			if(u.getPlayerID()==playerID){
+				myUnits.add(u);
+			}
+		}
+		return myUnits;
 	}
 	
 	
@@ -608,8 +648,16 @@ public class GameState {
 		return units;
 	}
 
-	public void setUnits(ArrayList<Unit> units) {
+	private void setUnits(ArrayList<Unit> units) {
 		this.units = units;
+	}
+
+	public UnitAction getMostRecentAction() {
+		return mostRecentAction;
+	}
+
+	private void setMostRecentAction(UnitAction mostRecentAction) {
+		this.mostRecentAction = mostRecentAction;
 	}
 
 	
