@@ -146,6 +146,16 @@ public class GameState {
 		return -1;
 	}
 	
+	// Returns manhattan distance between two points
+	public static int getManhattanDistance(int a, int b){
+		int ax = a%10;
+		int ay = a/10;
+		int bx = b%10;
+		int by = b/10;
+		
+		return (bx-ax)+(by-ay);
+	}
+	
 	// Returns the map index for the grid dx to the right and dy up. Also handles edge cases
 	private int getUnitAdjacentIndex(Unit u,int dx, int dy){
 		

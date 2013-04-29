@@ -42,7 +42,7 @@ public class GameMain {
 		
 	
 		
-		int numTurns = 100;
+		int numTurns = 1;
 		for(int t=0;t<numTurns;t++){
 			if(!gs.gameOver)
 			//	gs.update();
@@ -60,13 +60,14 @@ public class GameMain {
 		}
 		
 		// Atter n number of turns, lets look at player 1's prob model
-		for(ProbabilisticUnit pu:((PlayerExample)p1).probabilityModel.values()){
+	//	System.out.println(((PlayerExample)p1).probabilityModel.keySet().size());
+	/*	for(ProbabilisticUnit pu:((PlayerExample)p1).probabilityModel.values()){
 			System.out.println("---------------");
 			pu.printLikelihoods();
 			System.out.println(pu.hasMoved());
-			System.out.println(pu.isIdentified() );
+			System.out.println(pu.isIdentified() ); 
 
-		}
+		} */
 	} 
 		
 		

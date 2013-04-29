@@ -39,7 +39,7 @@ public class PlayerGameState{
 		ArrayList<PlayerUnit> myUnits2 = new ArrayList<PlayerUnit>();
 		for(Unit u:myUnits1){
 			if(u.getAlive()){
-				myUnits2.add(new PlayerUnit(this.gs.getUnitIndex(u),u.getID()));
+				myUnits2.add(new PlayerUnit(this.gs.getUnitIndex(u),u.getID(),u.getRank()));
 			}
 		}
 		return myUnits2;

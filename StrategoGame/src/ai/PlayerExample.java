@@ -22,6 +22,20 @@ public class PlayerExample extends Player{
 	int[] killed; // Indices correspond to GameState. ranks. Leave first index blank
 	int[] unidentified; // Indices correspond to GameState ranks. Leave first index blank
 
+	
+	//State Constants
+	public static final int LOW_KNOWLEDGE= 0;
+	public static final int MODERATE_KNOWLEDGE= 1;
+	public static final int LOW_POWER= 0;
+	public static final int EQUAL_POWER= 1;
+	public static final int HIGH_POWER= 2;
+
+	// Keeps track of which state you are in
+	int knowledgeState; // 0: low; 1: moderate
+	int powerState;	// 0: low; 1: equal; 2: high
+	
+	
+	
 	public PlayerExample(int playerID){
 		super(playerID);
 		
@@ -95,7 +109,7 @@ public class PlayerExample extends Player{
 	
 
 	public UnitAction nextMove(PlayerGameState gs) {
-		// These are all the attributes available to player from GameState
+		// These are all the attributes available to player from GameState.
 	
 		ArrayList<UnitAction> legalActions = gs.getLegalActions();// All Legal Actions available to the units of this player
 		ArrayList<PlayerUnit> enemyUnits = gs.getEnemyUnits();// All of this player's alive enemy units
@@ -103,11 +117,18 @@ public class PlayerExample extends Player{
 		int[] map = gs.getMap(); 	// Terrain Map of the game world
 		ArrayList<GameEvent> gameEvents = gs.getGameEvents(); // All the events that happened in the game
 		
+		UnitAction selectedAction = null;
+		//System.out.println("At this turn, " + this.playerID + " has " + legalActions.size() + " legal Actions. ");
 		
 		// IF this is the first time this method is called, we will have to initialize the probability model with prior values
 		if(!this.initialized){
 			
 			initialized=true;
+			
+			// Put yourself in start state (low knowledge, equal power)
+			this.knowledgeState = PlayerExample.LOW_KNOWLEDGE;
+			this.powerState = PlayerExample.EQUAL_POWER;
+			
 			// Initialize a probability model for all enemy units. This will be modified at
 			// every step using Bayesian filtering
 			probabilityModel = new HashMap<Integer,ProbabilisticUnit>();
@@ -143,11 +164,143 @@ public class PlayerExample extends Player{
 		this.reassignProbabilities(gameEvents);
 
 		
-		// return random legal action
-		Random randomGenerator = new Random();
+		// Now that the probabilities are updated, check what state you are in
+		
+		// Find out what your power state is. To do this, compare your strongest player to your opponent's strongest player (see killed array)
+		int myStrongestRank = 9; // This is not right.
+		for(PlayerUnit pu:myUnits){
+			if(pu.getRank()<myStrongestRank){
+				myStrongestRank=pu.getRank();
+			}
+		}
+		
+		// Find enemy's strongest rank here
+		int enemyStrongestRank = 1;
+		if(killed[GameState.MARSHAL]==GameState.NUM_MARSHAL){
+			enemyStrongestRank=2;
+		}
+		if(killed[GameState.GENERAL]==GameState.NUM_GENERAL){
+			enemyStrongestRank=3;
+		}
+		if(killed[GameState.COLONEL]==GameState.NUM_COLONEL){
+			enemyStrongestRank=4;
+		}
+		if(killed[GameState.MAJOR]==GameState.NUM_MAJOR){
+			enemyStrongestRank=5;
+		}
+		if(killed[GameState.CAPTAIN]==GameState.NUM_CAPTAIN){
+			enemyStrongestRank=6;
+		}
+		if(killed[GameState.LIEUTENANT]==GameState.NUM_LIEUTENANT){
+			enemyStrongestRank=7;
+		}
+		if(killed[GameState.SERGEANT]==GameState.NUM_SERGEANT){
+			enemyStrongestRank=8;
+		}
+		if(killed[GameState.MINER]==GameState.NUM_MINER){
+			enemyStrongestRank=9;
+		}
+		if(killed[GameState.SCOUT]==GameState.NUM_SCOUT){
+			enemyStrongestRank=10;
+		}
+		System.out.println("Player " + this.playerID +"' s strongest rank is: " +myStrongestRank + ", and his enemy's strongest rank is " + enemyStrongestRank +".");
+		
+		if(enemyStrongestRank>myStrongestRank){
+			this.powerState=PlayerExample.LOW_POWER;
+		}
+		if(enemyStrongestRank==myStrongestRank){
+			this.powerState=PlayerExample.EQUAL_POWER;
+		}
+		if(enemyStrongestRank<myStrongestRank){
+			this.powerState=PlayerExample.HIGH_POWER;
+		}
+		
+		// Now determine your knowledge state. For now, if you know the identity of 3 enemy unit, lets say you are in moderate stage
+		
+		int numberOfAliveIdentifiedEnemyUnits = 0;
+		//Try to find all the known players
+		for(Integer i:this.probabilityModel.keySet()){
+			if(this.probabilityModel.get(i).isIdentified()){
+				numberOfAliveIdentifiedEnemyUnits++;
+			}
+		}
+		
+		if(numberOfAliveIdentifiedEnemyUnits>=3){
+			this.knowledgeState=PlayerExample.MODERATE_KNOWLEDGE;
+		}
+		
+		System.out.println("Player " + this.playerID +"' s current state is: " +this.knowledgeState + ", " + this.powerState +".");
+		
+		
+		// Based on current state, pick an action
+		
+		// IF current state is low knowledge, equal power, use low ranking units for discovery purposes
+		if(this.knowledgeState==PlayerExample.LOW_KNOWLEDGE&&this.powerState==PlayerExample.EQUAL_POWER){
+			// Find the lowest ranking unit that can towards an enemy OR can attack an enemy
+			int weakestRank = 1;
+			ArrayList<UnitAction> weakestPlayerActions = new ArrayList<UnitAction>();
+			for(UnitAction ua:legalActions){
+				// Find the lowest ranked unit
+				if(ua.getUnit().getRank()>weakestRank){
+					weakestRank=ua.getUnit().getRank();
+				}
+			}
+			for(UnitAction ua:legalActions){
+				if(ua.getUnit().getRank()==weakestRank){
+					weakestPlayerActions.add(ua);
+				}
+			}
+			
+			// Go through probability model and pick an enemy Unit most likely to be a flag
+			float h = 0;
+			ProbabilisticUnit m = null;
+			Integer mf = null;
+			for(Integer i:this.probabilityModel.keySet()){
+				if((this.probabilityModel.get(i).rankLikelihoods[GameState.FLAG]-h)>0.001){
+					h = this.probabilityModel.get(i).rankLikelihoods[GameState.FLAG];
+					m=this.probabilityModel.get(i);
+				}
+			}
+		//	if(m!=null){
+			//	
+		//	}
+			
+			
+			// Pick the action based either
+			// 1. Attacking an unidentified enemy player OR
+			// 2. Moving towards the closest possible flag
+			for(UnitAction ua:weakestPlayerActions){
+				if((ua.getAction()==UnitAction.attack)&&(!this.probabilityModel.get(ua.getTarget().getID()).isIdentified())){
+										
+					selectedAction = ua;
+				}
+			}
+			int closestDistance = 1000;
+			UnitAction closestAction = weakestPlayerActions.get(0);
+			System.out.println("Player " + this.playerID +"' s weakest ranking player is: " +weakestRank + ", and it has  " + weakestPlayerActions.size() +" actions.");
+			for(UnitAction ua:weakestPlayerActions){
 				
-		int randInt = randomGenerator.nextInt(legalActions.size());
-		return legalActions.get(randInt);
+				if(GameState.getManhattanDistance(ua.getTargetTile(), m.getLocation())<closestDistance){
+					closestDistance = GameState.getManhattanDistance(ua.getTargetTile(), m.getLocation());
+					closestAction = ua;
+				}
+			}
+			if(selectedAction==null){
+				selectedAction=closestAction;
+			}
+			
+		}
+		else{
+			
+		
+			// return random legal action
+			Random randomGenerator = new Random();
+					
+			int randInt = randomGenerator.nextInt(legalActions.size());
+			selectedAction = legalActions.get(randInt);
+		}
+		
+		return selectedAction;
 		//return legalActions.get(0);
 		
 	}
@@ -200,6 +353,7 @@ public class PlayerExample extends Player{
 				 
 				 if(mostRecentMyGameEvent.getTargetDies()){
 					 this.killed[mostRecentTargetRank]=this.killed[mostRecentTargetRank]+1;
+					 this.probabilityModel.remove(mostRecentTargetID);
 				 } 
 				 
 			 }
@@ -246,8 +400,9 @@ public class PlayerExample extends Player{
 				// 	probabilityModel.get(recentlyMovedEnemyID).printLikelihoods();
 				}
 			 
-			 if(mostRecentEnemyGameEvent.getTargetDies()){
+			 if(mostRecentEnemyGameEvent.getUnitDies()){
 				 this.killed[recentlyAttackedEnemyRank]=this.killed[recentlyAttackedEnemyRank]+1;
+				 this.probabilityModel.remove(recentlyMovedEnemyID);
 			 } 
 			
 			
