@@ -76,9 +76,9 @@ public class PlayerExample2 extends Player {
 	}
 
 	@Override
-	public UnitAction nextMove(GameState gs) {
+	public UnitAction nextMove(PlayerGameState gs) {
 		// TODO Auto-generated method stub
-		ArrayList<UnitAction> legalActions = gs.getLegalActions(this.getPlayerID()); // Change object so that playerID is automatic
+		ArrayList<UnitAction> legalActions = gs.getLegalActions(); //getLegalActions(this.getPlayerID()); // Change object so that playerID is automatic
 		
 		// return random legal action
 		Random randomGenerator = new Random();
