@@ -6,6 +6,7 @@ import java.util.ArrayList;
 public abstract class Player {
 	protected int  playerID ; // should it be static?
 	protected ArrayList<Unit> units;
+	protected boolean initialized;
 	
 	public Player(int playerID)
 	{
@@ -83,7 +84,7 @@ public abstract class Player {
 		
 	} */
 	
-	public abstract UnitAction nextMove(GameState gs);
+	public abstract UnitAction nextMove(PlayerGameState gs);
 
 	public int getPlayerID() {
 		return playerID;

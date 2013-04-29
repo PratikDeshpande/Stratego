@@ -41,6 +41,8 @@ public class GameState {
 
 	public boolean gameOver;
 	public int winningPlayer;
+	
+	public static int unitIDs;
 
 	// This is the terrain of Stratego. 0 is traversible and 1 is not
 	private final int[] map = 
@@ -64,9 +66,12 @@ public class GameState {
 	
 	// The two AI agents who are playing the game 
 	private Player player1,player2;
+	//These are the gamestate objects that will be passed to each respective player
+	// This is done because each player can observe different things in the environment 
+	private PlayerGameState player1State, player2State;
 
-	// The most recent move made
-	private UnitAction mostRecentAction;
+	// Keeps track of all events in the game
+	private ArrayList<GameEvent> gameEvents;
 
 
 	//Initialize everything. 
@@ -74,11 +79,17 @@ public class GameState {
 		// Game will keep going until gameOver is true. gameOver should become true when
 		// 1. A player captures a flag OR
 		// 2. When a player has No Legal Actions //TODO
+		GameState.unitIDs = 0;
+		
 		this.gameOver = false;
 		
 		// Initialize the 2 players
 		this.player1 = player1;
 		this.player2 = player2;
+		
+		// Initialize the Players' Game States
+		this.player1State = new PlayerGameState(this,this.player1);
+		this.player2State = new PlayerGameState(this,this.player2);
 		
 		// Place the units on the map according the players' initial positions
 		this.units = new ArrayList<Unit>();
@@ -102,6 +113,9 @@ public class GameState {
 			this.navigationMap.get(new Integer(index)).setOccupyingUnit(u);
 		}
 				
+		// Initialize GameEvents list. This will keep track of all the events in the game
+		gameEvents = new ArrayList<GameEvent>();
+				
 	}
 	
 	// Set's the unit's x and y coordinates to the given int tile target location TODO test edge cases, verify
@@ -121,7 +135,7 @@ public class GameState {
 	}
 	
 	// Returns the Unit's index location on map.
-	private int getUnitIndex(Unit u){
+	public static int getUnitIndex(Unit u){
 		if(u.getPlayerID()==1){
 			return ((9-u.getX())+(u.getY()*10));
 		}
@@ -160,14 +174,15 @@ public class GameState {
 	// Modifies the GameState in accordance with the game rules in response to a UnitAction
 	private void executeAction(UnitAction action){
 		
-		this.setMostRecentAction(action);
+		//this.setMostRecentAction(action);
+		GameEvent recentEvent = new GameEvent(action);
 		
 		Unit u = action.getUnit();
 		int actionPerformed = action.getAction();
 		int targetTile = action.getTargetTile();
 		
 		// Print what the action is so users can know.
-		System.out.print("Player " + u.getPlayerID() + "'s " + u.getRank() + " at " + this.getUnitIndex(u));
+	//	System.out.print("Player " + u.getPlayerID() + "'s " + u.getRank() + " at " + this.getUnitIndex(u));
 		
 		
 		
@@ -177,7 +192,7 @@ public class GameState {
 		
 		// If the action performed is a MOVE
 		if(actionPerformed==UnitAction.move){
-			System.out.print(" moved to "+ targetTile +".\n");
+	//		System.out.print(" moved to "+ targetTile +".\n");
 			// Update unit's location to reflect move. Navigation Map will be updated later in the code
 			this.setTargetLocation(u, targetTile); // TODO check edge cases for this function. verify if it works
 		}
@@ -188,7 +203,7 @@ public class GameState {
 			Unit target = action.getTarget();
 			// Removes target from map. If the target is unharmed, the code will re-insert the target into the navigation map
 		
-			System.out.print(" attacked Player " + target.getPlayerID() + " 's " + target.getRank() + " at " + targetTile + ".\n" );
+	//		System.out.print(" attacked Player " + target.getPlayerID() + " 's " + target.getRank() + " at " + targetTile + ".\n" );
 
 			
 			this.navigationMap.get(Integer.valueOf(this.getUnitIndex(target))).setOccupyingUnit(null);
@@ -271,6 +286,9 @@ public class GameState {
 			if(target.getAlive()){
 				this.navigationMap.get(Integer.valueOf(this.getUnitIndex(target))).setOccupyingUnit(target);
 			}
+			else{
+				recentEvent.setTargetDies(true);
+			}
 			
 		}
 		
@@ -278,8 +296,11 @@ public class GameState {
 		if(u.getAlive()){
 			this.navigationMap.get(Integer.valueOf(this.getUnitIndex(u))).setOccupyingUnit(u);
 		}
+		else{
+			recentEvent.setUnitDies(true);
+		}
 
-
+		gameEvents.add(recentEvent);
 
 	}
 	
@@ -304,7 +325,7 @@ public class GameState {
 		}
 		else{		
 			// Retrieve Player 1's Next Move.
-			UnitAction p1Action = player1.nextMove(this);
+			UnitAction p1Action = player1.nextMove(this.player1State);
 		//	UnitAction p1Action = this.getLegalActions(player1.playerID).get(0); // For Testing Purposes
 	
 			// Implement Player 1's Move.
@@ -333,7 +354,7 @@ public class GameState {
 		}
 		else{
 			// Retrieve Player 2's Next Move
-			UnitAction p2Action = player2.nextMove(this);
+			UnitAction p2Action = player2.nextMove(this.player2State);
 	
 			// Implement Player 2's Next Move.
 			
@@ -376,7 +397,8 @@ public class GameState {
 				// If the unit is a scout, it can move in any direction until it hits an obstruction
 				
 				// Checks to see if unit is a regular unit (including miner)
-				if((u.getRank()<=GameState.MINER)||(u.getRank()==GameState.SPY)){ 
+				//TODO Change Gamestate.SCOUT back to GameState.MINER
+				if((u.getRank()<=GameState.SCOUT)||(u.getRank()==GameState.SPY)){ 
 				//	System.out.println("unit: "+ u.getRank());
 
 					// Will store the adjacent index values
@@ -463,8 +485,8 @@ public class GameState {
 					
 				}
 				
-				// IF unit is a Scout
-				if(u.getRank()==GameState.SCOUT){
+				// IF unit is a Scout //TODO Change back to GameState.SCOUT
+				if(u.getRank()==100){
 					
 					// In all 4 directions, go until it runs into
 					//	1. Edge OR
@@ -652,12 +674,13 @@ public class GameState {
 		this.units = units;
 	}
 
-	public UnitAction getMostRecentAction() {
-		return mostRecentAction;
+
+	public ArrayList<GameEvent> getGameEvents() {
+		return gameEvents;
 	}
 
-	private void setMostRecentAction(UnitAction mostRecentAction) {
-		this.mostRecentAction = mostRecentAction;
+	public void setGameEvents(ArrayList<GameEvent> gameEvents) {
+		this.gameEvents = gameEvents;
 	}
 
 	

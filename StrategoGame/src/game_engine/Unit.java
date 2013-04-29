@@ -8,6 +8,7 @@ public  class Unit{
 	private boolean alive;
 	private int rank; // From 
 	private boolean hidden;
+	private int ID;
 	
 	/* Player instantiates unit. The Player class checks to make
 	 * sure that no two units are in the same location, and that there aren't
@@ -20,6 +21,8 @@ public  class Unit{
 		this.rank = rank;
 		this.alive = true;
 		this.hidden = true;
+		this.setID(GameState.unitIDs);
+		GameState.unitIDs++;
 	}
 	
 	//NOTE: Move this action to the GameState class
@@ -116,6 +119,14 @@ public  class Unit{
 
 	public void setHidden(boolean hidden) {
 		this.hidden = hidden;
+	}
+
+	public int getID() {
+		return ID;
+	}
+
+	public void setID(int iD) {
+		ID = iD;
 	}
 	
 	

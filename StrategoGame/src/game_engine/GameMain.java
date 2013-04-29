@@ -9,6 +9,9 @@ import java.awt.Dimension;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 
+import ai.PlayerExample;
+import ai.ProbabilisticUnit;
+
 
 public class GameMain {
 	//public GameState gs;
@@ -39,7 +42,7 @@ public class GameMain {
 		
 	
 		
-		int numTurns = 10;
+		int numTurns = 100;
 		for(int t=0;t<numTurns;t++){
 			if(!gs.gameOver)
 			//	gs.update();
@@ -54,7 +57,16 @@ public class GameMain {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
-			}
+		}
+		
+		// Atter n number of turns, lets look at player 1's prob model
+		for(ProbabilisticUnit pu:((PlayerExample)p1).probabilityModel.values()){
+			System.out.println("---------------");
+			pu.printLikelihoods();
+			System.out.println(pu.hasMoved());
+			System.out.println(pu.isIdentified() );
+
+		}
 	} 
 		
 		
