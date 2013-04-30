@@ -284,6 +284,7 @@ public class GameState {
 				// both die
 				u.setAlive(false);
 				target.setAlive(false);
+				System.out.println("Both attackers die");
 			}
 			// IF target has a higher rank value, then it dies
 			else if(rank>u.getRank()){
@@ -315,7 +316,7 @@ public class GameState {
 	}
 	
 	// Retrieves moves from both players for one turn and updates GameState based on those moves.  
-	public void update()
+	public void update(int pID)
 	{
 		// For Testing Purposes
 	/*	for(UnitAction ua:this.getLegalActions(1)){	
@@ -325,59 +326,84 @@ public class GameState {
 			System.out.println("Player2 LegalAction: "+ua.getAction() + " to " + ua.getTargetTile());
 		} */
 
+		if(pID==1){
 		
-		// Checks to see if Player 1 has any legal moves. If not, player 1 loses.
-		if(this.getLegalActions(player1.getPlayerID()).isEmpty()){
-			this.gameOver=true;
-			this.winningPlayer = player2.getPlayerID();			
-			System.out.println("GAME OVER!!!\nPlayer "+this.winningPlayer+" has won the match!");
-			return;
-		}
-		else{		
-			// Retrieve Player 1's Next Move.
-			UnitAction p1Action = player1.nextMove(this.player1State);
-		//	UnitAction p1Action = this.getLegalActions(player1.playerID).get(0); // For Testing Purposes
-	
-			// Implement Player 1's Move.
-			
-				// Loops through Units to find Unit that performs move. 
-			for(Unit u:this.units){
+			// Checks to see if Player 1 has any legal moves. If not, player 1 loses.
+			if(this.getLegalActions(player1.getPlayerID()).isEmpty()){
+				this.gameOver=true;
+				this.winningPlayer = player2.getPlayerID();			
+				System.out.println("GAME OVER!!!\nPlayer "+this.winningPlayer+" has won the match!");
+				return;
+			}
+			else{		
+				// Retrieve Player 1's Next Move.
+				UnitAction p1Action = player1.nextMove(this.player1State);
 				
-				if(u.equals(p1Action.getUnit())){
+				
+				System.out.print("Player " + player1.playerID + "' s selected Action is: " + "Unit " + p1Action.getUnit().getID()+ " with rank " + p1Action.getUnit().getRank() + " at  " + GameState.getUnitIndex(p1Action.getUnit()) + " chooses to ");
+				if(p1Action.getAction()==UnitAction.move){
+					System.out.print(" move to " + p1Action.getTargetTile() + ".\n");
+				}
+				else{
+					System.out.print(" attack " + p1Action.getTarget().getRank() + " at " + GameState.getUnitIndex(p1Action.getTarget()) + ".\n");
+				}
+				
+				
+			//	UnitAction p1Action = this.getLegalActions(player1.playerID).get(0); // For Testing Purposes
+		
+				// Implement Player 1's Move.
+				
+					// Loops through Units to find Unit that performs move. 
+				for(Unit u:this.units){
 					
-					// execute the action
-					this.executeAction(p1Action);				
-					
-					
+					if(u.equals(p1Action.getUnit())){
+						
+						// execute the action
+						this.executeAction(p1Action);				
+						
+						
+					}
 				}
 			}
 		}
 		
-		//	UnitAction p2Action = this.getLegalActions(2).get(0);
+		if(pID==2){
 
-		// Checks to see if Player 2 has any legal moves. If not, player 2 loses.
-		if(this.getLegalActions(player2.getPlayerID()).isEmpty()){
-			this.gameOver=true;
-			this.winningPlayer = player1.getPlayerID();			
-			System.out.println("GAME OVER!!!\nPlayer "+this.winningPlayer+" has won the match!");
-			return;
-		}
-		else{
-			// Retrieve Player 2's Next Move
-			UnitAction p2Action = player2.nextMove(this.player2State);
+			//	UnitAction p2Action = this.getLegalActions(2).get(0);
 	
-			// Implement Player 2's Next Move.
-			
-				// Loops through Units to find Unit that performs move.
-			for(Unit u:this.units){
-				if(u.equals(p2Action.getUnit())){
-					
-					// execute the action
-					this.executeAction(p2Action);
-					
-					
+			// Checks to see if Player 2 has any legal moves. If not, player 2 loses.
+			if(this.getLegalActions(player2.getPlayerID()).isEmpty()){
+				this.gameOver=true;
+				this.winningPlayer = player1.getPlayerID();			
+				System.out.println("GAME OVER!!!\nPlayer "+this.winningPlayer+" has won the match!");
+				return;
+			}
+			else{
+				// Retrieve Player 2's Next Move
+				UnitAction p2Action = player2.nextMove(this.player2State);
+		
+				
+				System.out.print("Player " + player2.playerID + "' s selected Action is: " + "Unit " + p2Action.getUnit().getID()+ " with rank " + p2Action.getUnit().getRank() + " at  " + GameState.getUnitIndex(p2Action.getUnit()) + " chooses to ");
+				if(p2Action.getAction()==UnitAction.move){
+					System.out.print(" move to " + p2Action.getTargetTile() + ".\n");
 				}
-		}
+				else{
+					System.out.print(" attack " + p2Action.getTarget().getRank() + " at " + GameState.getUnitIndex(p2Action.getTarget()) + ".\n");
+				}
+				
+				// Implement Player 2's Next Move.
+				
+					// Loops through Units to find Unit that performs move.
+				for(Unit u:this.units){
+					if(u.equals(p2Action.getUnit())){
+						
+						// execute the action
+						this.executeAction(p2Action);
+						
+						
+					}
+			}
+			}
 		}
 		
 
@@ -399,8 +425,8 @@ public class GameState {
 		// Cycle through all of the player's units and find legal actions
 		for(Unit u:this.units){
 						
-			// Checks to see if unit belongs to player
-			if(u.getPlayerID()==playerID){
+			// Checks to see if unit belongs to player AND if the unit is ALIVE
+			if((u.getAlive())&&(u.getPlayerID()==playerID)){
 				
 				
 				// If the unit is a regular unit, it can move to any adjacent spot

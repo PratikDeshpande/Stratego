@@ -20,7 +20,7 @@ public class GameMain {
 		
 				
 		Player p1 = new PlayerExample(1);
-		Player p2 = new PlayerExample(2);
+		Player p2 = new PlayerExample2(2);
 		GameState gs = new GameState(p1, p2);
 		//Player asdf = new PlayerExample();
 		
@@ -42,16 +42,19 @@ public class GameMain {
 		
 	
 		
-		int numTurns = 1;
+		int numTurns = 100;
 		for(int t=0;t<numTurns;t++){
 			if(!gs.gameOver)
 			//	gs.update();
 			//	graphicsPanel.repaint();
 			//	System.out.println("Update");
 				try {
-					gs.update();
+					gs.update(1);
 					graphicsPanel.repaint();
 					Thread.sleep(1000);
+					gs.update(2);
+					graphicsPanel.repaint();
+
 
 				} catch (InterruptedException e) {
 					// TODO Auto-generated catch block

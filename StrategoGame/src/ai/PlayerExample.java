@@ -33,6 +33,7 @@ public class PlayerExample extends Player{
 	// Keeps track of which state you are in
 	int knowledgeState; // 0: low; 1: moderate
 	int powerState;	// 0: low; 1: equal; 2: high
+	Random rgen;
 	
 	
 	
@@ -125,6 +126,8 @@ public class PlayerExample extends Player{
 			
 			initialized=true;
 			
+			rgen = new Random();
+			
 			// Put yourself in start state (low knowledge, equal power)
 			this.knowledgeState = PlayerExample.LOW_KNOWLEDGE;
 			this.powerState = PlayerExample.EQUAL_POWER;
@@ -203,7 +206,7 @@ public class PlayerExample extends Player{
 		if(killed[GameState.SCOUT]==GameState.NUM_SCOUT){
 			enemyStrongestRank=10;
 		}
-		System.out.println("Player " + this.playerID +"' s strongest rank is: " +myStrongestRank + ", and his enemy's strongest rank is " + enemyStrongestRank +".");
+		//System.out.println("Player " + this.playerID +"' s strongest rank is: " +myStrongestRank + ", and his enemy's strongest rank is " + enemyStrongestRank +".");
 		
 		if(enemyStrongestRank>myStrongestRank){
 			this.powerState=PlayerExample.LOW_POWER;
@@ -236,6 +239,122 @@ public class PlayerExample extends Player{
 		
 		// IF current state is low knowledge, equal power, use low ranking units for discovery purposes
 		if(this.knowledgeState==PlayerExample.LOW_KNOWLEDGE&&this.powerState==PlayerExample.EQUAL_POWER){
+			
+			// Change of strategy. Use the closest unit (with legal moves available) to enemy unknown units and make them attack. (n^2)
+			// Additional Change: Instead of identifying just 1 closest unit, identify about 4 and pick randomly among them
+			
+			/*
+			int[] shortestDistances = new int[4];
+			for(int i=0;i<shortestDistances.length;i++){
+				shortestDistances[i] = 1000;
+			}
+			// Find the closest 4 unidentified enemyUnits
+			ArrayList<ProbabilisticUnit> closestEnemyUnits = new ArrayList<ProbabilisticUnit>();
+			Unit[] closestUnits
+			*/
+			
+			// Find 4 of your units with the largest numver of legal moves
+			//System.out.println("Size of legal actions +" + legalActions.size());
+			
+			
+			// See if any of the legal actions result in killing an unidentified enemy
+			for(UnitAction ua:legalActions){
+				if(ua.getAction()==UnitAction.attack){
+					if(!this.probabilityModel.get(ua.getTarget().getID()).isIdentified()){
+						return ua;
+					}
+				}
+			}
+			
+			
+			int shortestDistance = 1000; // initial			
+			
+			// Make the choice of enemyunit random
+			int randIndex = rgen.nextInt(enemyUnits.size());
+
+			int randEnemyID = enemyUnits.get(randIndex).getID();
+			
+			
+			ProbabilisticUnit closestEnemyUnit = this.probabilityModel.get(randEnemyID); // initial
+			
+			// Ok pick a random unidentified enemy unit
+			// For each enemy unidentified unit, identify a unit of yours that is close to it.
+			Unit closestUnit = legalActions.get(0).getUnit(); // initial
+			ArrayList<Unit> searchedUnits = new ArrayList<Unit>();
+			for(UnitAction ua:legalActions){
+				if(!searchedUnits.contains(ua.getUnit())){
+					Unit u = ua.getUnit(); // Now we find the closest enemy unknown unit to this.
+					
+					for(Integer i:this.probabilityModel.keySet()){
+						
+						// If enemy Unit is unknown
+						if(!this.probabilityModel.get(i).isIdentified()){
+							
+						// If the distance from unit and this enemy unit is less than the shortest distance so far, up date the closest unit values
+							if(GameState.getManhattanDistance(GameState.getUnitIndex(u), this.probabilityModel.get(i).getLocation())<shortestDistance){
+								shortestDistance = GameState.getManhattanDistance(GameState.getUnitIndex(u), this.probabilityModel.get(i).getLocation());
+								closestEnemyUnit = this.probabilityModel.get(i);
+								closestUnit = u;
+							}
+						}
+					}
+				}
+			}
+			// Now we know what the closest unit is to an unknown enemy unit. We want this unit to attack or move towards that unit.
+			// So, we scan through that unit's actions. If there is an attack and the attack is towards an unidentified unit, then we select that move.
+			// else, we pick a move that will minimize the distance between that unit and the closest unidentified enemy unit.
+			
+			// First we find all the available action the closestUnit has
+			ArrayList<UnitAction> closestPlayerActions = new ArrayList<UnitAction>();
+			for(UnitAction ua:legalActions){
+				if(ua.getUnit().equals(closestUnit)){
+			//		System.out.println("The matching works!");
+					closestPlayerActions.add(ua);		
+				}
+			}
+			
+			// Now we have all the actions of the closest player. See if there is an attack action. If the attack action is for an unid unit, then choose that one.
+			int minimumDistance = 1000;
+			UnitAction minimizingAction = closestPlayerActions.get(0);
+			for(UnitAction ua:closestPlayerActions){
+				if(ua.getAction()==UnitAction.attack){
+					if( !this.probabilityModel.get(ua.getTarget().getID()).isIdentified()){
+						selectedAction = ua;
+				//		System.out.println("Attacking closest unknown enemy");
+						//return selectedAction;
+					}
+				}
+				else{// else, pick a move that will minimize distance between closestUnit and closestUnknownEnemy
+
+					if(GameState.getManhattanDistance(ua.getTargetTile(), closestEnemyUnit.getLocation())<minimumDistance){
+						minimumDistance = GameState.getManhattanDistance(ua.getTargetTile(), closestEnemyUnit.getLocation());
+						minimizingAction = ua;
+						//	selectedAction = ua;
+				//		System.out.println("Moving in a direction that will minimize distance to closest unknown enemy unit");
+						//return selectedAction;
+					}
+					// Add some randomness. Either pick minimizing action or pick random action
+					Random randomGenerator1 = new Random();
+				//	Random randomGenerator1 = new Random();
+					
+					int randIntIf = randomGenerator1.nextInt(100);
+					int randInt = randomGenerator1.nextInt(legalActions.size());
+
+					if(randIntIf>0){
+						selectedAction = minimizingAction;
+					}
+					else{					
+					selectedAction = legalActions.get(randInt);
+					
+					
+					}
+			}
+			}
+			
+			
+			
+			
+			/*
 			// Find the lowest ranking unit that can towards an enemy OR can attack an enemy
 			int weakestRank = 1;
 			ArrayList<UnitAction> weakestPlayerActions = new ArrayList<UnitAction>();
@@ -277,7 +396,7 @@ public class PlayerExample extends Player{
 			}
 			int closestDistance = 1000;
 			UnitAction closestAction = weakestPlayerActions.get(0);
-			System.out.println("Player " + this.playerID +"' s weakest ranking player is: " +weakestRank + ", and it has  " + weakestPlayerActions.size() +" actions.");
+			//System.out.println("Player " + this.playerID +"' s weakest ranking player is: " +weakestRank + ", and it has  " + weakestPlayerActions.size() +" actions.");
 			for(UnitAction ua:weakestPlayerActions){
 				
 				if(GameState.getManhattanDistance(ua.getTargetTile(), m.getLocation())<closestDistance){
@@ -288,6 +407,35 @@ public class PlayerExample extends Player{
 			if(selectedAction==null){
 				selectedAction=closestAction;
 			}
+			*/
+			
+		}
+		// IF current state is low knowledge, equal power, use low ranking units for discovery purposes
+		// In this state, we try to kill all the identified players
+		if(this.knowledgeState==PlayerExample.MODERATE_KNOWLEDGE&&this.powerState==PlayerExample.EQUAL_POWER){
+			
+			// List of all identified enemy players
+			ArrayList<ProbabilisticUnit> identifiedEnemies = new ArrayList<ProbabilisticUnit>();
+			
+			for(Integer i:this.probabilityModel.keySet()){
+				if(this.probabilityModel.get(i).isIdentified()){
+					identifiedEnemies.add(this.probabilityModel.get(i));
+				}
+			}
+			//System.out.println("Number of ID'd enemies: " + identifiedEnemies.size());
+			
+			// Find the highest ranked (lowest number) enemy.
+			ProbabilisticUnit highestRankedEnemy = identifiedEnemies.get(0);
+			for(ProbabilisticUnit pu:identifiedEnemies){
+				if(pu.getHighestLikelihood()<highestRankedEnemy.getHighestLikelihood()){
+					highestRankedEnemy = pu;
+				}
+			}
+			
+			System.out.println("Highest ranked enemy's rank is : " + highestRankedEnemy.getHighestLikelihood());
+
+			selectedAction = legalActions.get(0); // change this
+			
 			
 		}
 		else{
@@ -300,6 +448,13 @@ public class PlayerExample extends Player{
 			selectedAction = legalActions.get(randInt);
 		}
 		
+	/*	System.out.print("Player " + this.playerID + "' s selected Action is: " + "Unit " + selectedAction.getUnit().getID()+ " with rank " + selectedAction.getUnit().getRank() + " at  " + GameState.getUnitIndex(selectedAction.getUnit()) + " chooses to ");
+		if(selectedAction.getAction()==UnitAction.move){
+			System.out.print(" move to " + selectedAction.getTargetTile() + ".\n");
+		}
+		else{
+			System.out.print(" attack " + selectedAction.getTarget().getRank() + " at " + GameState.getUnitIndex(selectedAction.getTarget()) + ".\n");
+		}*/
 		return selectedAction;
 		//return legalActions.get(0);
 		

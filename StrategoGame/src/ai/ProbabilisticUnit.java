@@ -76,6 +76,20 @@ public class ProbabilisticUnit {
 		}
 	}
 	
+	// Returns the most likely rank for this unit
+	public int getHighestLikelihood(){
+		
+		float highestL = 0;
+		int mostLikelyRank = 1;
+		for(int i=0;i<13;i++){
+			if(rankLikelihoods[i]>highestL){
+				highestL = rankLikelihoods[i];
+				mostLikelyRank = i;
+			}
+		}
+		return mostLikelyRank;
+	}
+	
 	public void printLikelihoods(){
 		for(float l:rankLikelihoods){
 			System.out.println(l + "\n");
