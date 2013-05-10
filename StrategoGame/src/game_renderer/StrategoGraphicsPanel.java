@@ -1,7 +1,7 @@
 package game_renderer;
 
-import game_engine.GameState;
-import game_engine.Unit;
+//import game_engine.GameState;
+//import game_engine.Unit;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -11,13 +11,16 @@ import java.util.ArrayList;
 
 import javax.swing.JPanel; // .swing.JPanel;
 
+import stratego_engine.GameState;
+import stratego_engine.MapTile;
+
 public class StrategoGraphicsPanel extends JPanel {
 	
 	private GameState gs;
 	
 	public StrategoGraphicsPanel(GameState gs){
 		this.setBackground(Color.BLACK);
-		this.setLayout(new BorderLayout());
+	//	this.setLayout(new BorderLayout());
 		this.setSize(new Dimension(600,600));
 		
 		this.gs = gs;
@@ -28,10 +31,69 @@ public class StrategoGraphicsPanel extends JPanel {
 	public void updateGS(GameState gs){
 		this.gs = gs;
 	}
+	
 	public void paintComponent(Graphics g) {
         super.paintComponent(g);
 
-        int[] map = this.gs.getMap();
+      //  int[] map = this.gs.getMap();
+        
+        MapTile[] map = this.gs.getMap();
+        
+          
+        // draw the game board here
+        for(int i=0;i<map.length;i++){
+        	
+        	// if the tile is occupied, draw the unit
+        	if(map[i].isTraversible()){
+        		g.setColor(Color.GREEN);
+        	}
+        	else{
+        		g.setColor(Color.BLUE);
+        	}
+        	
+        //	g.fillRect((i%10)*40, (i/10)*60, 40, 60);
+        	g.fill3DRect((i%10)*40, (i/10)*40, 40, 40, true);
+        	
+        }
+        
+        // draw the game pieces
+        for(int i=0;i<map.length;i++){
+        	if(map[i].isOccupied()){
+        		
+        		// IF piece is alive
+        		if(this.gs.getPiece(map[i].getOccupyingPiece()).isAlive()){
+        			
+        		
+	        		// if piece belongs to player 1
+	        		if(this.gs.getPiece(map[i].getOccupyingPiece()).getPlayerID()==1){
+	        			g.setColor(Color.ORANGE);
+	        			// if piece is hidden
+	        			if(this.gs.getPiece(map[i].getOccupyingPiece()).isHidden()){
+		        			g.setColor(Color.RED);
+	        			}
+	        		}
+	        		// if piece belongs to player 2
+	        		if(this.gs.getPiece((map[i].getOccupyingPiece())).getPlayerID()==2){
+	        			g.setColor(Color.DARK_GRAY);
+	        			if(this.gs.getPiece(map[i].getOccupyingPiece()).isHidden()){
+		        			g.setColor(Color.GRAY);
+
+	        			}
+	        		}
+	        		
+	        		// draw rect
+	            	g.fill3DRect(((i%10)*40)+2, ((i/10)*40)+3, 35, 35, true);
+
+	        		
+	        		// write text over it
+	        		g.setColor(Color.WHITE);
+	        		g.drawString( Integer.valueOf(this.gs.getPiece(map[i].getOccupyingPiece()).getRank()).toString(), ((i%10)*40)+17, ((i/10)*40)+25);
+
+        		}
+        	}
+        }
+        
+        /*
         
         int xStart = 30;
         int yStart = 30;
@@ -133,10 +195,11 @@ public class StrategoGraphicsPanel extends JPanel {
 	
 	        		
 	        	}
+	        	
         	}
         	
         	
-        }
+        } */
    
     }
 	

@@ -9,6 +9,7 @@ import java.awt.Dimension;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 
+import ai.ExpectiminimaxAI;
 import ai.PlayerExample;
 import ai.ProbabilisticUnit;
 
@@ -18,10 +19,24 @@ public class GameMain {
 	public static void main(String args[])
 	{
 		
-				
+			
+		// Set the terrain of the game here. 0 is traversible, 1 is not.
+		int[] terrain = 
+			{   0,0,0,0,0,0,0,0,0,0,
+				0,0,0,0,0,0,0,0,0,0,
+				0,0,0,0,0,0,0,0,0,0, 
+				0,0,0,0,0,0,0,0,0,0,
+				0,0,1,1,0,0,1,1,0,0, // For testing we are removing the lakes in the middle
+				0,0,1,1,0,0,1,1,0,0,
+				0,0,0,0,0,0,0,0,0,0, 
+				0,0,0,0,0,0,0,0,0,0,
+				0,0,0,0,0,0,0,0,0,0, 
+				0,0,0,0,0,0,0,0,0,0 };
+		
+		
 		Player p1 = new PlayerExample(1);
-		Player p2 = new PlayerExample2(2);
-		GameState gs = new GameState(p1, p2);
+		Player p2 = new ExpectiminimaxAI(2);
+		GameState gs = new GameState(p1, p2,terrain);
 		//Player asdf = new PlayerExample();
 		
 		
@@ -42,7 +57,7 @@ public class GameMain {
 		
 	
 		
-		int numTurns = 100;
+		int numTurns = 200;
 		for(int t=0;t<numTurns;t++){
 			if(!gs.gameOver)
 			//	gs.update();

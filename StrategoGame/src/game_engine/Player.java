@@ -12,7 +12,7 @@ public abstract class Player {
 	{
 		this.playerID = playerID;
 		this.units = new ArrayList<Unit>();
-		initializePos();
+	//	initializePos();
 		
 	}
 	

@@ -39,26 +39,19 @@ public class GameState {
 	public static final int NUM_BOMB = 6;
 	public static final int NUM_FLAG = 1;
 
+	
+	// This section stores stats for the game
 	public boolean gameOver;
 	public int winningPlayer;
 	
+	// Keeps track of the number of Units instantiated in the game
 	public static int unitIDs;
-
-	// This is the terrain of Stratego. 0 is traversible and 1 is not
-	private final int[] map = 
-			{   0,0,0,0,0,0,0,0,0,0,
-				0,0,0,0,0,0,0,0,0,0,
-				0,0,0,0,0,0,0,0,0,0, 
-				0,0,0,0,0,0,0,0,0,0,
-				0,0,1,1,0,0,1,1,0,0, // For testing we are removing the lakes in the middle
-				0,0,1,1,0,0,1,1,0,0,
-				0,0,0,0,0,0,0,0,0,0, 
-				0,0,0,0,0,0,0,0,0,0,
-				0,0,0,0,0,0,0,0,0,0, 
-				0,0,0,0,0,0,0,0,0,0 };
 	
 	//private ArrayList<MapNode> navigationMap;
-	private HashMap<Integer,MapNode> navigationMap; 
+	// Maps an index in the map array to a map node (which indicates traversibility, occupancy
+	// TODO Could an array suffice?
+	private MapNode[] navigationmap;
+	//private HashMap<Integer,MapNode> navigationMap; 
 	
 	
 	// List of all units on the map
@@ -66,6 +59,7 @@ public class GameState {
 	
 	// The two AI agents who are playing the game 
 	private Player player1,player2;
+	
 	//These are the gamestate objects that will be passed to each respective player
 	// This is done because each player can observe different things in the environment 
 	private PlayerGameState player1State, player2State;
@@ -75,10 +69,12 @@ public class GameState {
 
 
 	//Initialize everything. 
-	public GameState(Player player1, Player player2){
+	public GameState(Player player1, Player player2, int[] terrain){
 		// Game will keep going until gameOver is true. gameOver should become true when
 		// 1. A player captures a flag OR
 		// 2. When a player has No Legal Actions //TODO
+		
+		// 
 		GameState.unitIDs = 0;
 		
 		this.gameOver = false;
@@ -86,6 +82,10 @@ public class GameState {
 		// Initialize the 2 players
 		this.player1 = player1;
 		this.player2 = player2;
+		
+		// Initialize the players into starting position
+		this.player1.initializePos();
+		this.player2.initializePos();
 		
 		// Initialize the Players' Game States
 		this.player1State = new PlayerGameState(this,this.player1);
@@ -411,9 +411,9 @@ public class GameState {
 	}
 	
 	// TODO: Make it return an array that represents occupied blocks as well
-	public int[] getMap()
+	public HashMap<Integer, MapNode> getMap()
 	{
-		return this.map; 
+		return this.navigationMap; 
 	} 
 	
 	// Gives all legal actions available to player
