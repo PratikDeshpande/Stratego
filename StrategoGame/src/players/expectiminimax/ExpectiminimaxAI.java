@@ -19,6 +19,9 @@ public class ExpectiminimaxAI extends Player {
 
 	private GameState gs;
 	
+	// for statistics
+	public static int nodesExpanded;
+	
 	private int depth; // Depth of the expectiminimax tree
 	
 	private MapTile[] map;
@@ -30,6 +33,7 @@ public class ExpectiminimaxAI extends Player {
 		super(playerID);
 		this.depth=depth;
 		this.probabilityModel = new HashMap<Integer,ProbabilisticPiece>();
+		initialized=false;
 	}
 
 	/* (non-Javadoc)
@@ -37,6 +41,13 @@ public class ExpectiminimaxAI extends Player {
 	 */
 	@Override
 	public PieceAction nextMove(GameState gs) {
+		
+		ExpectiminimaxAI.nodesExpanded=0;
+		
+		// Retrive kill list as well
+
+		ArrayList<PieceAction> legalActions = gs.getLegalActions(this.playerID);
+		HashMap<Integer,PieceAction> pastActions = gs.getPastActions();
 		
 		this.gs = gs;
 		
@@ -61,31 +72,69 @@ public class ExpectiminimaxAI extends Player {
 			for(Integer i:this.opponentPieces){
 				ProbabilisticPiece p = new ProbabilisticPiece(i);
 				// Testing: Rank is 7
-				p.setMostLikelyRank(7);
+			//	p.setMostLikelyRank(7);
+				p.setMostLikelyRank(gs.getPiece(i).getRank());
+				this.probabilityModel.put(i, p);
+			}
+			// Fill prob model with own pieces as well
+			for(Integer i:this.myPieces){
+				ProbabilisticPiece p = new ProbabilisticPiece(i);
+					
+				p.setMostLikelyRank(gs.getPiece(i).getRank()); // TODO Fix when PlayerGamestate is implemented
+				this.probabilityModel.put(i, p);
+
 			}
 			
 		}
+		
+		// Reassign probabilities
+		
+		
+		
+		//find optimal legal action through minimax
+		
 		
 		// Be sure to make a deep copy of the map before creating an expectiminimax node
 		MapTile[] newMap = new MapTile[100];
 		
 		for(int i=0;i<newMap.length;i++){
 			newMap[i] =this.map[i].getCopy();
+		//	System.out.println("Map index: " + i + ", contents: " + newMap[i].getOccupyingPiece()+ ", occupied: "+newMap[i].isOccupied());
 		}
+		
+
+		// Create Expectiminimax Node from current game state
+		GameTreeNode en = new GameTreeNode(this,newMap,false,this.depth,null);
+		int reward = en.calulateReward();
+		System.out.println("Optimal Action: "+ en.getOptimalAction());
+		System.out.println("Number of nodes expanded: " + ExpectiminimaxAI.nodesExpanded);
+		//en.getPiece(); // piece
+		//en.getAction(); // action
+		// look for a legal action that matchesen.getOptimalAction()
+		
+		PieceAction selectedAction = legalActions.get(0);
+		
+		GameTreeAction optimalAction = en.getOptimalAction();
+		for(PieceAction pa:legalActions){
+			
+			if(pa.getPiece().getID()==optimalAction.getPiece()){ // piece matches
+				
+				if(pa.getAction()==optimalAction.getAction()){ // acton matches
+					if(pa.getTargetTile()==optimalAction.getTargetTile()){ // targe tile matches
+						selectedAction = pa;
+					}
+				}
+			}
+			
+		}
+		
 		
 		// Retrive kill list as well
 		
-		// All objects that are available from game state
-	/*	ArrayList<PieceAction> legalActions = gs.getLegalActions(this.playerID);
-		ArrayList<Integer> opponentPieces = gs.getOpponentPieces(this.playerID);
-		ArrayList<Integer> myPieces = gs.getMyPieces(this.playerID);
 
-		HashMap<Integer,PieceAction> pastActions = gs.getPastActions();
-		MapTile[] map = gs.getMap();
-		*/
 		
 		
-		return null;
+		return selectedAction;
 	}
 
 	/**

@@ -28,7 +28,7 @@ public class MapTile {
 	 */
 	public void setOccupyingPiece(int occupyingPiece) {
 		this.occupyingPiece = occupyingPiece;
-		if(occupyingPiece==-1){
+		if((occupyingPiece==-1)||(occupyingPiece==0)){
 			this.occupied=false;
 		}
 		else{

@@ -197,7 +197,7 @@ public class GameState {
 				// if adjacent spot is NOT occupied
 				if(!this.map[this.getLocation(piece.getPlayerID(), piece.getX(), piece.getY()-1)].isOccupied()){
 					if(this.map[this.getLocation(piece.getPlayerID(), piece.getX(), piece.getY()-1)].isTraversible()){
-						System.out.println(this.getLocation(piece.getPlayerID(), piece.getX(), piece.getY()-1));
+						//System.out.println(this.getLocation(piece.getPlayerID(), piece.getX(), piece.getY()-1));
 						legalActions.add(new PieceAction(piece, this.getLocation(piece.getPlayerID(), piece.getX(), piece.getY()-1)));
 					}
 				}
@@ -253,8 +253,8 @@ public class GameState {
 			
 			// all legal moves ahead
 			int aheadY = piece.getY()+1;
-			// while y<10, is traversible, and is unoccupied
-			while((aheadY<10)&&(this.map[this.getLocation(piece.getPlayerID(), piece.getX(), aheadY)].isTraversible())&&(!this.map[this.getLocation(piece.getPlayerID(), piece.getX(), aheadY)].isOccupied())){
+			// while y<9, is traversible, and is unoccupied
+			while((aheadY<9)&&(this.map[this.getLocation(piece.getPlayerID(), piece.getX(), aheadY)].isTraversible())&&(!this.map[this.getLocation(piece.getPlayerID(), piece.getX(), aheadY)].isOccupied())){
 				legalActions.add(new PieceAction(piece, this.getLocation(piece.getPlayerID(), piece.getX(), aheadY)));
 				aheadY = aheadY+1;
 			}
@@ -269,11 +269,17 @@ public class GameState {
 			// all legal moves behind
 			int behindY = piece.getY()-1;
 			// while y>0, is traversible, and is unoccupied
-			while((behindY>=0)&&(this.map[this.getLocation(piece.getPlayerID(), piece.getX(), behindY)].isTraversible())&&(!this.map[this.getLocation(piece.getPlayerID(), piece.getX(), behindY)].isOccupied())){
+	//		System.out.println("behindY: "+behindY);
+			while((behindY>0)&&(this.map[this.getLocation(piece.getPlayerID(), piece.getX(), behindY)].isTraversible())&&(!this.map[this.getLocation(piece.getPlayerID(), piece.getX(), behindY)].isOccupied())){
 				legalActions.add(new PieceAction(piece, this.getLocation(piece.getPlayerID(), piece.getX(), behindY)));
 				behindY = behindY-1;
 			}
 			// if behindY is occupied
+	//		System.out.println("behindY: "+behindY);
+	//		System.out.println("piece: "+piece.getID());
+	//		System.out.println("piece.getX: "+piece.getX());
+	//		System.out.println("location: "+ this.getLocation(piece.getPlayerID(), piece.getX(), behindY));
+
 			if(this.map[this.getLocation(piece.getPlayerID(), piece.getX(), behindY)].isOccupied()){
 				// if the occupying unit is an opponent
 				if(this.getPiece(this.map[this.getLocation(piece.getPlayerID(), piece.getX(), behindY)].getOccupyingPiece()).getPlayerID()!=piece.getPlayerID()){
@@ -399,12 +405,15 @@ public class GameState {
 			
 			// if the target happens to be a bomb
 			if(targetRank==GameState.BOMB){
+				System.out.println("Attacked a bomb");
 				// if the attacker is a miner
 				if(attackerRank==GameState.MINER){
 					action.getTarget().kill();
 					
 				}
 				else{
+					System.out.println("attacker dies");
+
 					action.getPiece().kill();
 				}
 			}

@@ -9,6 +9,7 @@ import java.awt.Dimension;
 
 import javax.swing.JFrame;
 
+import players.expectiminimax.ExpectiminimaxAI;
 import players.human.HumanPlayer;
 import players.random.RandomAI;
 
@@ -37,9 +38,13 @@ public class EngineMain {
 				0,0,0,0,0,0,0,0,0,0 };
 		
 	//	Player p1 = new HumanPlayer(1);
-		Player p1 = new RandomAI(1);
+	//	Player p1 = new RandomAI(1);
+		Player p1 = new ExpectiminimaxAI(1,2); // W.O Pruning, you get out of memory at depth of 5
+		
 	//	Player p2 = new HumanPlayer(2);
 		Player p2 = new RandomAI(2);
+	//	Player p2 = new ExpectiminimaxAI(1,1);
+		
 		GameState gs = new GameState(p1, p2,terrain);
 		
 		
@@ -65,6 +70,8 @@ public class EngineMain {
 		while((!gs.isGameOver())/*&&(currentTurn<=numTurns)*/){
 			
 			
+			// if p1 has no legal moves, it loses
+			
 			PieceAction p1Action = p1.nextMove(gs);
 			System.out.println(p1Action);
 			gs.execute(p1Action);
@@ -72,7 +79,7 @@ public class EngineMain {
 			graphicsPanel.repaint();
 			
 			try {
-				Thread.sleep(1);
+				Thread.sleep(10);
 			} catch (InterruptedException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -85,7 +92,7 @@ public class EngineMain {
 			graphicsPanel.repaint();
 
 			try {
-				Thread.sleep(1);
+				Thread.sleep(10);
 			} catch (InterruptedException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
