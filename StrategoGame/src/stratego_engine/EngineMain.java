@@ -39,7 +39,7 @@ public class EngineMain {
 		
 	//	Player p1 = new HumanPlayer(1);
 	//	Player p1 = new RandomAI(1);
-		Player p1 = new ExpectiminimaxAI(1,2); // W.O Pruning, you get out of memory at depth of 5
+		Player p1 = new ExpectiminimaxAI(1,3); // W.O Pruning, you get out of memory at depth of 5
 		
 	//	Player p2 = new HumanPlayer(2);
 		Player p2 = new RandomAI(2);
@@ -79,7 +79,7 @@ public class EngineMain {
 			graphicsPanel.repaint();
 			
 			try {
-				Thread.sleep(10);
+				Thread.sleep(1);
 			} catch (InterruptedException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -92,7 +92,7 @@ public class EngineMain {
 			graphicsPanel.repaint();
 
 			try {
-				Thread.sleep(10);
+				Thread.sleep(1);
 			} catch (InterruptedException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();

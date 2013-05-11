@@ -6,6 +6,7 @@ package players.expectiminimax;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+
 import stratego_engine.GameState;
 import stratego_engine.MapTile;
 import stratego_engine.PieceAction;
@@ -48,6 +49,7 @@ public class ExpectiminimaxAI extends Player {
 
 		ArrayList<PieceAction> legalActions = gs.getLegalActions(this.playerID);
 		HashMap<Integer,PieceAction> pastActions = gs.getPastActions();
+		
 		
 		this.gs = gs;
 		
@@ -105,8 +107,11 @@ public class ExpectiminimaxAI extends Player {
 
 		// Create Expectiminimax Node from current game state
 		GameTreeNode en = new GameTreeNode(this,newMap,false,this.depth,null);
-		int reward = en.calulateReward();
+		float reward = en.calulateReward();
 		System.out.println("Optimal Action: "+ en.getOptimalAction());
+		
+
+				
 		System.out.println("Number of nodes expanded: " + ExpectiminimaxAI.nodesExpanded);
 		//en.getPiece(); // piece
 		//en.getAction(); // action
@@ -115,6 +120,25 @@ public class ExpectiminimaxAI extends Player {
 		PieceAction selectedAction = legalActions.get(0);
 		
 		GameTreeAction optimalAction = en.getOptimalAction();
+		
+		// Check to see if optimal action has been repeated
+		int numActions = pastActions.keySet().size();
+		int repeatActionKey = numActions - 3;
+		
+		if(repeatActionKey>0){
+			
+			PieceAction yourLastAction = pastActions.get(repeatActionKey);
+			if(yourLastAction.getPiece().getID()==optimalAction.getPiece()){
+				if(yourLastAction.getAction()==optimalAction.getAction()){
+					if(yourLastAction.getTargetTile()==optimalAction.getTargetTile()){
+						// get the second optimal action
+						optimalAction = en.getSecondOptimalAction();
+					}
+				}
+			}
+			
+		}
+		
 		for(PieceAction pa:legalActions){
 			
 			if(pa.getPiece().getID()==optimalAction.getPiece()){ // piece matches
@@ -132,6 +156,7 @@ public class ExpectiminimaxAI extends Player {
 		// Retrive kill list as well
 		
 
+		// Testing: Print all nodes and do a depth first search of all nodes
 		
 		
 		return selectedAction;
@@ -150,7 +175,6 @@ public class ExpectiminimaxAI extends Player {
 	public HashMap<Integer,ProbabilisticPiece> getProbabilityModel() {
 		return probabilityModel;
 	}
-
-
+	
 
 }

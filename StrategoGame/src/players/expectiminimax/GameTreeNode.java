@@ -4,6 +4,7 @@
 package players.expectiminimax;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
 import stratego_engine.GameState;
 import stratego_engine.MapTile;
@@ -14,6 +15,23 @@ import stratego_engine.PieceAction;
  *
  */
 public class GameTreeNode {
+	
+	// Default Weights of all the pieces
+	public static final float MARSHAL_WEIGHT = 400;
+	public static final float GENERAL_WEIGHT = 200;
+	public static final float COLONEL_WEIGHT = 100;
+	public static final float MAJOR_WEIGHT = 75;
+	public static final float CAPTAIN_WEIGHT = 50;
+	public static final float LIEUTENANT_WEIGHT = 25;
+	public static final float SERGEANT_WEIGHT = 15;
+	public static final float MINER_WEIGHT = 25;
+	public static final float SCOUT_WEIGHT = 30;
+	public static final float SPY_WEIGHT = 200;
+	public static final float BOMB_WEIGHT = 20;
+	public static final float FLAG_WEIGHT = 10000;
+	
+	
+	
 //	private ArrayList<PieceBelief> enemyPieces;
 //	private ArrayList<PieceBelief> myPieces; // NOTE: Don't make a deep copy. probabilities will stay the same. Locations can change on the map[]
 	private MapTile[] map; 
@@ -22,8 +40,9 @@ public class GameTreeNode {
 	private int currentDepth; // Depth of this node
 	private ExpectiminimaxAI parent; // Parent AI Class that instantiated this Game Tree
 	
-	private ArrayList<GameTreeNode> opponentChildren; // Only initialize if adversary
-	private ArrayList<GameTreeNode> myChildren; // Only initialize if NOT adversary
+	// Changed from ArrayList to HashMap so that its value can be stored
+	private HashMap<GameTreeNode,Float> opponentChildren; // Only initialize if adversary
+	private HashMap<GameTreeNode,Float> myChildren; // Only initialize if NOT adversary
 	
 	
 	// The Action that resulted in this Game Tree Node (null if this is head node)
@@ -83,30 +102,122 @@ public class GameTreeNode {
 	}
 	
 	// Evaluate this state (internatal function used by calculateReward()
-	private int evaluate(){
+	private float evaluate(){
 		
-		// For now, just add up the number of units you have
-		int numPieces = 0; // the number of YOUR pieces
 		
+		// Keeps track of how many of your pieces are alive
+		int[] myPieces = new int[13];
+		// Keeps track of how many of the enemy pieces are alive
+		int[] enemyPieces = new int[13];
+		
+		// Keeps track of the weights of your pieces
+		float[] myWeights = new float[13];
+		// Keeps track of the weights of enemy pieces
+		float[] enemyWeights = new float[13];
+		
+		myWeights[1] = GameTreeNode.MARSHAL_WEIGHT;
+		myWeights[2] = GameTreeNode.GENERAL_WEIGHT;
+		myWeights[3] = GameTreeNode.COLONEL_WEIGHT;
+		myWeights[4] = GameTreeNode.MAJOR_WEIGHT;
+		myWeights[5] = GameTreeNode.CAPTAIN_WEIGHT;
+		myWeights[6] = GameTreeNode.LIEUTENANT_WEIGHT;
+		myWeights[7] = GameTreeNode.SERGEANT_WEIGHT;
+		myWeights[8] = GameTreeNode.MINER_WEIGHT;
+		myWeights[9] = GameTreeNode.SCOUT_WEIGHT;
+		myWeights[10] = GameTreeNode.SPY_WEIGHT;
+		myWeights[11] = GameTreeNode.BOMB_WEIGHT;
+		myWeights[12] = GameTreeNode.FLAG_WEIGHT;
+
+		enemyWeights[1] = GameTreeNode.MARSHAL_WEIGHT;
+		enemyWeights[2] = GameTreeNode.GENERAL_WEIGHT;
+		enemyWeights[3] = GameTreeNode.COLONEL_WEIGHT;
+		enemyWeights[4] = GameTreeNode.MAJOR_WEIGHT;
+		enemyWeights[5] = GameTreeNode.CAPTAIN_WEIGHT;
+		enemyWeights[6] = GameTreeNode.LIEUTENANT_WEIGHT;
+		enemyWeights[7] = GameTreeNode.SERGEANT_WEIGHT;
+		enemyWeights[8] = GameTreeNode.MINER_WEIGHT;
+		enemyWeights[9] = GameTreeNode.SCOUT_WEIGHT;
+		enemyWeights[10] = GameTreeNode.SPY_WEIGHT;
+		enemyWeights[11] = GameTreeNode.BOMB_WEIGHT;
+		enemyWeights[12] = GameTreeNode.FLAG_WEIGHT;
+		
+		
+		// Count the number of pieces on board in this node
 		for(MapTile mt:this.map){
-			
 			if(mt.isOccupied()){
+				// If this is your piece
 				if(this.parent.getGameState().getPiece(mt.getOccupyingPiece()).getPlayerID()==this.parent.getPlayerID()){
-					numPieces++;
+					
+					// add to the count
+					myPieces[this.parent.getGameState().getPiece(mt.getOccupyingPiece()).getRank()]++;
+					
 				}
+				// If this is not your piece
 				if(this.parent.getGameState().getPiece(mt.getOccupyingPiece()).getPlayerID()!=this.parent.getPlayerID()){
-					numPieces = numPieces -10;
+					
+					// add to the count
+					enemyPieces[this.parent.getGameState().getPiece(mt.getOccupyingPiece()).getRank()]++;
+					
 				}
+				
 			}
 		}
 		
+		// First feature: Multiplying the weight of the Marshall by 0.8 if the opponent has a spy on board
+		if(enemyPieces[GameState.SPY]>0){ // enemy has spy
+			myWeights[GameState.MARSHAL] = (float) (myWeights[GameState.MARSHAL] * 0.8);
+		}
+		if(myPieces[GameState.SPY]>0){ // if our agent has a spy
+			enemyWeights[GameState.MARSHAL] = (float) (enemyWeights[GameState.MARSHAL] * 0.8);
+		}
 		
+		// Second feature: Multiplying the weight of the Miners with (4-#left) if the number of miners is less than 3
+		if(myPieces[GameState.MINER]<3){ // if our agent has less than 3 miners
+			myWeights[GameState.MINER] = myWeights[GameState.MINER] * (4 - myPieces[GameState.MINER]);
+		}
+		if(enemyPieces[GameState.MINER]<3){ // if our agent has less than 3 miners
+			enemyWeights[GameState.MINER] = enemyWeights[GameState.MINER] * (4 - enemyPieces[GameState.MINER]);
+		}
+		
+		// Third feature: Sets the value of the bomb
+		
+		// Testing: Print myPieces here
+		
+		/*
+		for(int i=1;i<myPieces.length;i++){
+			System.out.println("Number of pieces of rank " + i + ": "+ myPieces[i]);
+
+		}
+		
+		// Testing: Print myWegihts here
+		for(int i=1;i<myWeights.length;i++){
+			System.out.println("Weight for rank " + i + ": "+ myWeights[i]);
+		}
+		*/
+		// Total: Multiplies the weights of the pieces with the number still on board
+		float myScore = 0;
+		float enemyScore = 0;
+		
+		for(int i=1;i<myPieces.length;i++){
+			
+			myScore = myScore + (myWeights[i] * myPieces[i]);
+			enemyScore = enemyScore + (enemyWeights[i] * enemyPieces[i]);
+		}
+		
+		
+		
+			
+		
+	
+	//	System.out.println("myScore : " + myScore);
+	//	System.out.println("enemyScore : " + enemyScore);
+
 		// TODO: Use Anjan's algorithm
-		return numPieces;
+		return myScore;
 	}
 	
 	// based on legal actions, return child nodes TODO you may not need this
-	private ArrayList<GameTreeNode> createChildren(){
+	private HashMap<GameTreeNode,Float> createChildren(){
 	//	System.out.println("Creating children");
 		// Print out the map
 	//	for(int z=0;z<this.map.length;z++){
@@ -120,7 +231,7 @@ public class GameTreeNode {
 
 		// GIven: Alive pieces, map, opponent(bool)
 		GameState gs = this.parent.getGameState();
-		ArrayList<GameTreeNode> children = new ArrayList<GameTreeNode>();
+		HashMap<GameTreeNode,Float> children = new HashMap<GameTreeNode,Float>();
 		if(this.currentDepth<=0){
 		//	System.out.println("Current depth is 0");
 			return children;
@@ -238,7 +349,7 @@ public class GameTreeNode {
 										//	System.out.println("this is opposing node");
 
 											if(gs.getPiece(pieceID).getPlayerID()!=this.parent.getPlayerID()){
-												children.add(new GameTreeNode(this.parent,m,false,this.currentDepth-1, a));
+												children.put(new GameTreeNode(this.parent,m,false,this.currentDepth-1, a),(float) 0);
 											}
 
 										}
@@ -250,7 +361,7 @@ public class GameTreeNode {
 											if(gs.getPiece(pieceID).getPlayerID()==this.parent.getPlayerID()){
 										//		System.out.println("piece's player ID matches ours");
 
-												children.add(new GameTreeNode(this.parent,m,true,this.currentDepth-1, a));
+												children.put(new GameTreeNode(this.parent,m,true,this.currentDepth-1, a),(float) 0);
 											}
 												
 										}
@@ -307,13 +418,13 @@ public class GameTreeNode {
 										if(this.opponent){
 											
 											if(gs.getPiece(pieceID).getID()!=this.parent.getPlayerID()){
-												children.add(new GameTreeNode(this.parent,ma,false,this.currentDepth-1, a));
+												children.put(new GameTreeNode(this.parent,ma,false,this.currentDepth-1, a),(float) 0);
 											}
 
 										}
 										else{
 											if(gs.getPiece(pieceID).getID()==this.parent.getPlayerID()){
-												children.add(new GameTreeNode(this.parent,ma,true,this.currentDepth-1, a));
+												children.put(new GameTreeNode(this.parent,ma,true,this.currentDepth-1, a),(float) 0);
 											}
 												
 										}
@@ -466,7 +577,7 @@ public class GameTreeNode {
 	
 	// TODO: Fix. Does not Perform Minimax
 	// Calculates the reward for this node
-	public int calulateReward(){
+	public float calulateReward(){
 		
 		if(this.currentDepth==0){
 			return this.evaluate();
@@ -474,10 +585,12 @@ public class GameTreeNode {
 		// else calculate the value of all the children
 		else if(this.opponent){
 			// Pick lowest r
-			int r = Integer.MAX_VALUE;
-			for(GameTreeNode opponentChild:this.opponentChildren){
-				if(opponentChild.calulateReward()<r){
-					r = opponentChild.calulateReward();
+			float r = Integer.MAX_VALUE; // we intentionally do not use Float.MAX_VALUE. We don't need to
+			for(GameTreeNode opponentChild:this.opponentChildren.keySet()){
+				float cr = opponentChild.calulateReward() + this.evaluate();
+				this.opponentChildren.put(opponentChild, cr);
+				if(cr<r){
+					r = cr;
 					// Update optimal action
 					this.optimalAction = opponentChild.getParentAction();
 				}
@@ -486,10 +599,12 @@ public class GameTreeNode {
 		}
 		else{
 			// pick highest r
-			int r = Integer.MIN_VALUE;
-			for(GameTreeNode child:this.myChildren){
-				if(child.calulateReward()>r){
-					r = child.calulateReward();
+			float r = Integer.MIN_VALUE;
+			for(GameTreeNode child:this.myChildren.keySet()){
+				float chr = child.calulateReward()+ this.evaluate();
+				this.myChildren.put(child, chr);
+				if(chr>r){
+					r = chr;
 					// Update optimal action
 					this.optimalAction = child.getParentAction();
 
@@ -519,12 +634,63 @@ public class GameTreeNode {
 	public GameTreeAction getOptimalAction() {
 		return optimalAction;
 	}
+	
+	public GameTreeAction getSecondOptimalAction(){
+		
+		// Go through all myChildren and find the second highest valued child
+		float highest = Integer.MIN_VALUE;
+		GameTreeNode highestNode = null;
+		float secondHighest = Integer.MIN_VALUE;
+		GameTreeNode secondHighestNode = null;
+		if(!opponent){
+			
+
+			for(GameTreeNode child:this.myChildren.keySet()){
+				
+				if(this.myChildren.get(child)>highest){
+					secondHighest = highest;
+					secondHighestNode = highestNode;
+					highest = this.myChildren.get(child);
+					highestNode = child;
+				}
+				
+			}
+			
+			if(secondHighestNode==null){
+				
+				secondHighest = Integer.MIN_VALUE;
+
+				for(GameTreeNode child:this.myChildren.keySet()){
+					
+					if(this.myChildren.get(child)<highest){
+						
+						if(this.myChildren.get(child)>secondHighest){
+							secondHighest = this.myChildren.get(child);
+							secondHighestNode = child;
+						}
+						
+					}
+					
+				}
+			}
+			
+		}
+		
+		return secondHighestNode.getParentAction();
+		
+		
+	}
 
 	/**
 	 * @param optimalAction the optimalAction to set
 	 */
 	public void setOptimalAction(GameTreeAction optimalAction) {
 		this.optimalAction = optimalAction;
+	}
+	
+	// For testing purposes. Prints the depth, parent action, game map, adversary statusnumber of children
+	public void printNode(){
+		
 	}
 	
 }

@@ -3,6 +3,8 @@
  */
 package players.expectiminimax;
 
+import stratego_engine.GameState;
+
 /**
  * @author Pratik
  *
@@ -45,7 +47,60 @@ public class ProbabilisticPiece {
 		this.ID = id;
 				
 		// set all likelihoods to equal TODO: Probability function not created yet
+		this.rankLikelihoods = new float[13];
+		
+		this.rankLikelihoods[0] = 0; // place holder so we can use 1-based indexing
+		this.rankLikelihoods[1] = GameState.NUM_MARSHAL;
+		this.rankLikelihoods[2] = GameState.NUM_GENERAL;
+		this.rankLikelihoods[3] = GameState.NUM_COLONEL;
+		this.rankLikelihoods[4] = GameState.NUM_MAJOR;
+		this.rankLikelihoods[5] = GameState.NUM_CAPTAIN;
+		this.rankLikelihoods[6] = GameState.NUM_LIEUTENANT;
+		this.rankLikelihoods[7] = GameState.NUM_SERGEANT;
+		this.rankLikelihoods[8] = GameState.NUM_MINER;
+		this.rankLikelihoods[9] = GameState.NUM_SCOUT;
+		this.rankLikelihoods[10] = GameState.NUM_SPY;
+		this.rankLikelihoods[11] = GameState.NUM_BOMB;
+		this.rankLikelihoods[12] = GameState.NUM_FLAG;
+		
+		this.normalize();
+		
 	}
+	
+	/*
+	 * Normalize the linkelihoods so that they add up to 1.0
+	 */
+	private void normalize(){
+		float sum = 0;
+		for(float i:this.rankLikelihoods){
+			sum = sum+i;
+		}
+		
+		for(int i=0;i<this.rankLikelihoods.length;i++){
+			this.rankLikelihoods[i] = this.rankLikelihoods[i]/sum;
+		}
+	}
+	
+	
+	
+	public void printLikelihoods(){
+		for(int i=0;i<this.rankLikelihoods.length;i++){
+			System.out.println("Rank: " + i +", likelihood: "+ this.rankLikelihoods[i]+ "\n");
+		}
+	}
+	
+	// Given an array of 
+	
+	// This ensures that the model stays normalized
+	public void setLikelihood(int index,float value){
+		this.rankLikelihoods[index]=value;
+		this.normalize();
+	}
+	
+	
+	
+	
+	
 	
 	/**
 	 * @return the identified

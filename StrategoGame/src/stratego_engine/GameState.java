@@ -472,6 +472,20 @@ public class GameState {
 	}
 
 	/**
+	 * @return the player1Killed
+	 */
+	public int[] getPlayer1Killed() {
+		return player1Killed;
+	}
+
+	/**
+	 * @return the player2Killed
+	 */
+	public int[] getPlayer2Killed() {
+		return player2Killed;
+	}
+
+	/**
 	 * @return the gameOver
 	 */
 	public boolean isGameOver() {
